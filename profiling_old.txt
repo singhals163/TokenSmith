@@ -1,0 +1,10 @@
+============================================================
+                 PIPELINE PROFILING RESULTS                 
+============================================================
+Function / Logic Block              | Calls    | Total Time (s)
+------------------------------------------------------------
+[Block] PDF to Markdown Batch Conversion | 1        | 2527.5310
+Extraction: convert_and_save_with_page_numbers (docling) | 1        | 2527.5310
+Extraction: extract_sections_from_markdown | 1        | 0.1001
+Extraction: preprocess_extracted_section | 800      | 0.0636
+============================================================

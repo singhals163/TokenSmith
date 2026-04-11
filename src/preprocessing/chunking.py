@@ -5,6 +5,9 @@ from typing import List, Tuple, Optional
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+# --- NEW: Import profiler tools ---
+from src.profiler import timeit
+
 # -------------------------- Chunking Configs --------------------------
 
 class ChunkConfig(ABC):
@@ -18,7 +21,6 @@ class ChunkConfig(ABC):
 
 @dataclass
 class SectionRecursiveConfig(ChunkConfig):
-    """Configuration for section-based chunking with recursive splitting."""
     recursive_chunk_size: int
     recursive_overlap: int
     
@@ -32,7 +34,6 @@ class SectionRecursiveConfig(ChunkConfig):
 # -------------------------- Chunking Strategies --------------------------
 
 class ChunkStrategy(ABC):
-    """Abstract base for all chunking strategies."""
     @abstractmethod
     def name(self) -> str:
         pass
@@ -46,11 +47,6 @@ class ChunkStrategy(ABC):
         pass
 
 class SectionRecursiveStrategy(ChunkStrategy):
-    """
-    Applies recursive character-based splitting to text.
-    This is meant to be used on already-extracted sections.
-    """
-
     def __init__(self, config: SectionRecursiveConfig):
         self.config = config
         self.recursive_chunk_size = config.recursive_chunk_size
@@ -62,11 +58,8 @@ class SectionRecursiveStrategy(ChunkStrategy):
     def artifact_folder_name(self) -> str:
         return "sections"
 
+    @timeit("Chunking: SectionRecursiveStrategy.chunk")
     def chunk(self, text: str) -> List[str]:
-        """
-        Recursively splits text into smaller chunks based on sentence boundaries.
-        If a chunk exceeds recursive_chunk_size, it is further split.
-        """
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.recursive_chunk_size,
             chunk_overlap=self.recursive_overlap,
@@ -77,11 +70,6 @@ class SectionRecursiveStrategy(ChunkStrategy):
 # ----------------------------- Document Chunker ---------------------------------
 
 class DocumentChunker:
-    """
-    Chunk text via a provided strategy.
-    Table blocks (<table>...</table>) are preserved within chunks.
-    """
-
     TABLE_RE = re.compile(r"<table>.*?</table>", re.DOTALL | re.IGNORECASE)
 
     def __init__(
@@ -106,6 +94,7 @@ class DocumentChunker:
                 chunk = chunk.replace(ph, t)
         return chunk
 
+    @timeit("Chunking: DocumentChunker.chunk")
     def chunk(self, text: str) -> List[str]:
         if not text:
             return []
