@@ -40,14 +40,24 @@ class TimerBlock:
         PROFILE_STATS[self.name]['count'] += 1
         PROFILE_STATS[self.name]['total_time'] += elapsed
 
-def print_profile_stats():
-    """Prints a clean, formatted table of all profiled sections."""
-    print("\n" + "="*60)
-    print(f"{'PIPELINE PROFILING RESULTS':^60}")
-    print("="*60)
-    print(f"{'Function / Logic Block':<35} | {'Calls':<8} | {'Total Time (s)':<10}")
-    print("-" * 60)
+def print_profile_stats(filepath=None):
+    """Prints a formatted table of all profiled sections to console or file."""
+    output = []
+    output.append("\n" + "="*60)
+    output.append(f"{'PIPELINE PROFILING RESULTS':^60}")
+    output.append("="*60)
+    output.append(f"{'Function / Logic Block':<35} | {'Calls':<8} | {'Total Time (s)':<10}")
+    output.append("-" * 60)
+    
     # Sort by total time descending
     for name, stats in sorted(PROFILE_STATS.items(), key=lambda x: x[1]['total_time'], reverse=True):
-        print(f"{name:<35} | {stats['count']:<8} | {stats['total_time']:.4f}")
-    print("="*60 + "\n")
+        output.append(f"{name:<35} | {stats['count']:<8} | {stats['total_time']:.4f}")
+    output.append("="*60 + "\n")
+    
+    final_text = "\n".join(output)
+    
+    if filepath:
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(final_text)
+    else:
+        print(final_text)
