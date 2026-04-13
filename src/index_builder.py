@@ -13,10 +13,11 @@ import pathlib
 import re
 import json
 from typing import List, Dict
+import subprocess
 
 import faiss
 from rank_bm25 import BM25Okapi
-from src.embedder import SentenceTransformer
+from src.embedder import CachedEmbedder
 
 from src.preprocessing.chunking import DocumentChunker, ChunkConfig
 from src.preprocessing.extraction import extract_sections_from_markdown
@@ -33,6 +34,23 @@ os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 DEFAULT_EXCLUSION_KEYWORDS = ['questions', 'exercises', 'summary', 'references']
+
+# --- NEW: Phase 2 Hardware Detection ---
+def detect_gpu() -> bool:
+    """Dynamically checks if a CUDA (NVIDIA) or Metal (Apple) GPU is available."""
+    try:
+        # Check for NVIDIA CUDA
+        subprocess.check_output('nvidia-smi', shell=True, stderr=subprocess.STDOUT)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    
+    # Check for Apple Silicon (Metal)
+    import platform
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        return True
+        
+    return False
 
 # ------------------------ Main index builder -----------------------------
 
@@ -148,11 +166,23 @@ def build_index(
 
     with TimerBlock("[Block] Step 2: Vector Embeddings Generation"):
         print(f"Embedding {len(all_chunks):,} chunks with {pathlib.Path(embedding_model_path).stem} ...")
-        embedder = SentenceTransformer(embedding_model_path)
+        
+        # PHASE 2 OPTIMIZATION: Use the CachedEmbedder instead of standard SentenceTransformer
+        embedder = CachedEmbedder(embedding_model_path)
 
-        if use_multiprocessing:
-            print("Starting multi-process pool for embeddings...")
-            pool = embedder.start_multi_process_pool(workers=4)
+        # PHASE 2 OPTIMIZATION: Dynamic Hardware Routing
+        has_gpu = detect_gpu()
+        if has_gpu:
+            print("Hardware Router: GPU detected. Forcing sequential execution to maximize VRAM throughput.")
+            should_multiprocess = False
+        else:
+            print("Hardware Router: CPU-only environment detected.")
+            should_multiprocess = use_multiprocessing
+
+        if should_multiprocess:
+            print("Starting CPU multi-process pool for embeddings...")
+            # Let it auto-detect optimal CPU cores rather than hardcoding to 4
+            pool = embedder.start_multi_process_pool() 
             try:
                 embeddings = embedder.encode_multi_process(
                     all_chunks, 
@@ -162,9 +192,10 @@ def build_index(
             finally:
                 embedder.stop_multi_process_pool(pool)
         else:
+            print("Starting high-throughput sequential embedding...")
             embeddings = embedder.encode(
                 all_chunks, 
-                batch_size=8, 
+                batch_size=32, # Increased batch size for optimal A100 GPU throughput
                 show_progress_bar=True,
                 convert_to_numpy=True 
             )
