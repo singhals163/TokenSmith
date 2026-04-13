@@ -1,0 +1,11 @@
+
+============================================================
+                 PIPELINE PROFILING RESULTS                 
+============================================================
+Function / Logic Block              | Calls    | Total Time (s)
+------------------------------------------------------------
+[Block] Total Parallel Extraction Pipeline | 1        | 1115.5430
+Phase 1 Map: Split PDF (pypdf)      | 1        | 7.3073
+Extraction: extract_sections_from_markdown | 1        | 0.4308
+Extraction: preprocess_extracted_section | 800      | 0.2133
+============================================================
