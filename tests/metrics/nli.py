@@ -23,10 +23,8 @@ class NLIEntailmentMetric(MetricBase):
     def _initialize(self) -> bool:
         """Initialize the NLI pipeline with the best available model."""
         try:
-            # Suppress CUDA warnings if running on CPU
-            os.environ.setdefault('CUDA_VISIBLE_DEVICES', '')
             warnings.filterwarnings("ignore", message=".*CUDA capability.*")
-            
+
             model_name = "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli"
             self._tokenizer = AutoTokenizer.from_pretrained(model_name)
             self._model = AutoModelForSequenceClassification.from_pretrained(model_name)

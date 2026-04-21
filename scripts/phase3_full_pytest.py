@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
 Phase 3 full pytest harness runner — runs tests/test_benchmarks.py once per
-embedding variant with the generator pipeline (Qwen2.5-1.5B-Instruct on CPU,
-because the V100 can't run the prebuilt llama-cpp-python CUDA kernels), and
+embedding variant with the generator pipeline (Qwen2.5-1.5B-Instruct), and
 aggregates the metric scores.
 
 For each variant:
@@ -11,8 +10,8 @@ For each variant:
   3. Copy tests/results/benchmark_results.json into experiments/phase3/{prefix}_pytest.json
   4. Tally final_score, semantic_similarity, keyword_similarity
 
-All generator inference runs on CPU (CUDA_VISIBLE_DEVICES="" at subprocess
-spawn time) to dodge the sm_70 kernel-compat issue.
+Generator runs on GPU via llama-cpp-python (n_gpu_layers=-1). Pass
+--cpu-only to disable this (sets CUDA_VISIBLE_DEVICES="" for the subprocess).
 """
 from __future__ import annotations
 
@@ -86,7 +85,7 @@ def build_config_yaml(variant: dict) -> pathlib.Path:
         "max_history_turns": 3,
         "index_prefix": variant["prefix"],
         "output_mode": "terminal",
-        "metrics": ["semantic", "keyword"],
+        "metrics": ["semantic", "keyword", "bleu"],
         "system_prompt_mode": "baseline",
     }
     path = OUT_DIR / f"{variant['prefix']}_pytest_config.yaml"
@@ -149,6 +148,7 @@ def run_variant(variant: dict, cpu_only: bool = False) -> dict:
 
     sem = [r.get("scores", {}).get("semantic_similarity") for r in results]
     kw = [r.get("scores", {}).get("keyword_similarity") for r in results]
+    bleu = [r.get("scores", {}).get("bleu_similarity") for r in results]
     final = [r.get("scores", {}).get("final_score") for r in results]
 
     summary = {
@@ -162,12 +162,14 @@ def run_variant(variant: dict, cpu_only: bool = False) -> dict:
         "n_benchmarks": len(results),
         "mean_semantic_similarity": _safe_mean(sem),
         "mean_keyword_similarity": _safe_mean(kw),
+        "mean_bleu": _safe_mean(bleu),
         "mean_final_score": _safe_mean(final),
         "per_benchmark": [
             {
                 "id": r.get("test_id"),
                 "semantic_similarity": r.get("scores", {}).get("semantic_similarity"),
                 "keyword_similarity": r.get("scores", {}).get("keyword_similarity"),
+                "bleu_similarity": r.get("scores", {}).get("bleu_similarity"),
                 "final_score": r.get("scores", {}).get("final_score"),
                 "passed": r.get("passed"),
             }

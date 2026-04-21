@@ -22,11 +22,10 @@ class SemanticSimilarityMetric(MetricBase):
     def _initialize(self) -> bool:
         """Initialize the sentence transformer model."""
         try:
-            os.environ['CUDA_VISIBLE_DEVICES'] = ''
             warnings.filterwarnings("ignore", message=".*CUDA capability.*")
             from sentence_transformers import util, SentenceTransformer
-            
-            self._model = SentenceTransformer('all-mpnet-base-v2')
+
+            self._model = SentenceTransformer('all-mpnet-base-v2', device='cpu')
             self._util = util
             return True
         except Exception as e:

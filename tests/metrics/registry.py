@@ -16,14 +16,15 @@ class MetricRegistry:
             KeywordMatchMetric,
             NLIEntailmentMetric,
             AsyncLLMJudgeMetric,
-            ChunkRetrievalMetric
+            ChunkRetrievalMetric,
+            BleuMetric,
         )
 
         # Metrics that need network/API credentials (AsyncLLMJudge) or large
         # model downloads (NLI DeBERTa) are best-effort so the suite still
         # runs in restricted environments.
         for cls in (SemanticSimilarityMetric, KeywordMatchMetric, NLIEntailmentMetric,
-                    AsyncLLMJudgeMetric, ChunkRetrievalMetric):
+                    AsyncLLMJudgeMetric, ChunkRetrievalMetric, BleuMetric):
             try:
                 self.register(cls())
             except Exception as e:
