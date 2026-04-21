@@ -5,6 +5,7 @@ Registered metric: KeywordMatchMetric(name='keyword')
 Registered metric: NLIEntailmentMetric(name='nli')
 Skipping AsyncLLMJudgeMetric: ValueError: No API key was provided. Please pass a valid API key. Learn how to create an API key at https://ai.google.dev/gemini-api/docs/api-key.
 Registered metric: ChunkRetrievalMetric(name='chunk_retrieval')
+Registered metric: BleuMetric(name='bleu')
 
 ============================================================
   TokenSmith Benchmark Configuration
@@ -16,7 +17,7 @@ Registered metric: ChunkRetrievalMetric(name='chunk_retrieval')
   Golden Chunks:      False
   HyDE Enabled:       False
   Output Mode:        terminal
-  Metrics:            semantic, keyword
+  Metrics:            semantic, keyword, bleu
 ============================================================
 
 
@@ -27,3 +28,278 @@ Registered metric: ChunkRetrievalMetric(name='chunk_retrieval')
 ────────────────────────────────────────────────────────────
   🔍 Retrieving chunks...
 llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of the model will not be utilized
+
+  ❌ FAILED
+  Final Score: 0.586 (threshold: 0.800)
+  Metric Breakdown:
+    • semantic     : 0.738
+    • keyword      : 0.333
+    • bleu         : 0.004
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  Aggregation with grouping works by applying a function (such as sum, average, maximum, minimum) to a set of values that are grouped together. This allows you to summarize data by combining values from multiple rows into a single row, while still retaining the ability to perform calculations on the grouped data. The result is a new table that contains the aggregated values and the corresponding groupings. This is useful for summarizing large datasets and identifying patterns or trends in the data.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: acid_properties
+  Question: What are the ACID properties of transactions?
+  Threshold: 0.82
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.699 (threshold: 0.820)
+  Metric Breakdown:
+    • semantic     : 0.818
+    • keyword      : 0.500
+    • bleu         : 0.006
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  The ACID properties of transactions are Atomicity, Consistency, Isolation, and Durability. These properties ensure that transactions are processed reliably and consistently, even in the presence of errors or failures. Atomicity means that a transaction is treated as a single unit of work, and either all of its operations succeed or none of them do. Consistency ensures that the database remains in a valid state after the transaction is completed. Isolation means that transactions are processed independently of each other, and that the results of one transaction do not affect the results of another. Durability means that once a transaction is committed, its results are permanent and cannot be rolled back. These properties are important for maintaining the integrity and reliability of data in a database system.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: bptree
+  Question: How does a B+ tree index organize keys and support search, insert, and delete, and why is it preferred over binary trees for disk-based access
+  Threshold: 0.78
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.429 (threshold: 0.780)
+  Metric Breakdown:
+    • semantic     : 0.686
+    • keyword      : 0.000
+    • bleu         : 0.001
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  A B+ tree index organizes keys in a way that allows for efficient search, insert, and delete operations. The key structure is designed to minimize disk I/O operations by storing keys in a way that allows for sequential access. This is achieved by splitting the tree into multiple levels, with each level containing a subset of the keys. The root level contains the most frequently accessed keys, while the leaf levels contain the keys that are most frequently accessed by the user.
+  
+  The B+ tree index supports search, insert, and delete operations by traversing the tree in a depth-first manner. When a search is performed, the algorithm starts at the root level and traverses down the tree until it finds the desired key. If the key is not found, the algorithm searches for the next level and continues the search until the key is found or the entire tree is traversed.
+  
+  Insert and delete operations are performed by modifying the tree structure to accommodate the new key. When inserting a new key, the algorithm searches for the appropriate level in the tree and inserts the key at the appropriate position. When deleting a key, the algorithm searches for the key and removes it from the tree.
+  
+  The B+ tree index is preferred over binary trees for disk-based access because it minimizes disk I/O operations. By splitting the tree into multiple levels, the B+ tree allows for sequential access to the keys, which reduces the number of disk I/O operations required to access the data. Additionally, the B+ tree's structure
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: fd_normalization
+  Question: What are functional dependencies?
+  Threshold: 0.7
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.285 (threshold: 0.700)
+  Metric Breakdown:
+    • semantic     : 0.456
+    • keyword      : 0.000
+    • bleu         : 0.002
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  Functional dependencies are relationships between attributes in a database where the value of one attribute is determined by the value of another attribute. They are used to determine the integrity of a database and to ensure that the database remains consistent and accurate. Functional dependencies are typically represented in the form of α → β, where α is a super key and β is a subset of R. A super key is a minimal super key, which is a super key that is also a proper subset of another super key. The third normal form (3NF) relaxes this constraint by allowing certain non-trivial functional dependencies whose left side is not a super key.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: sql_isolation
+  Question: What isolation guarantees does SQL provide by default?
+  Threshold: 0.7
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.666 (threshold: 0.700)
+  Metric Breakdown:
+    • semantic     : 0.841
+    • keyword      : 0.375
+    • bleu         : 0.004
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  SQL provides several isolation guarantees by default, which are designed to ensure that transactions are executed in a way that minimizes the risk of data inconsistencies. Here are the main isolation guarantees provided by SQL:
+  
+  1. **Serializable Isolation**:
+     - This is the highest level of isolation guarantee provided by SQL. In this mode, SQL guarantees that transactions will be executed in the order they were started, and any changes made by one transaction will be visible to other transactions only after the transaction has completed.
+     - This mode is the most restrictive and can lead to slower execution times because it requires all transactions to wait for each other.
+  
+  2. **Read Committed Isolation**:
+     - This is the most common isolation level provided by SQL. In this mode, SQL guarantees that changes made by one transaction are visible to other transactions only after the transaction has completed.
+     - This mode is the most restrictive and can lead to slower execution times because it requires all transactions to wait for each other.
+  
+  3. **Repeatable Read Isolation**:
+     - This mode guarantees that a transaction will see the same data values for a given query in each execution, even if the data is changed by other transactions between the executions.
+     - This mode is also the most restrictive and can lead to slower execution times because it requires all transactions to wait for each other.
+  
+  4. **Serializable Isolation with Serializable Locks**:
+     - This is a combination of the Serializable Isolation and Serializable Locks modes. In
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: primary_foreign_keys
+  Question: Explain primary keys and foreign keys
+  Threshold: 0.72
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ✅ PASSED
+  Final Score: 0.815 (threshold: 0.720)
+  Metric Breakdown:
+    • semantic     : 0.905
+    • keyword      : 0.667
+    • bleu         : 0.110
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  Primary keys and foreign keys are two types of constraints used in database management systems to ensure data integrity and maintain relationships between tables.
+  
+  1. Primary Keys:
+     - A primary key is a unique identifier for each record in a table.
+     - It is a column or a combination of columns that uniquely identifies each record.
+     - Each table can have only one primary key.
+     - The primary key ensures that each record is unique and cannot be duplicated.
+     - It is used to enforce referential integrity between tables.
+     - Example: In a customer table, the customer ID could be the primary key.
+  
+  2. Foreign Keys:
+     - A foreign key is a column or a combination of columns in a table that references the primary key of another table.
+     - It establishes a relationship between two tables.
+     - The foreign key ensures that the referenced data exists in the referenced table.
+     - It is used to enforce referential integrity between tables.
+     - Example: In a customer table, the customer ID could be the foreign key referencing the customer ID in the address table.
+  
+  In summary, primary keys ensure uniqueness and referential integrity within a table, while foreign keys establish relationships between tables and ensure referential integrity between them.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: database_schema
+  Question: What is a database schema
+  Threshold: 0.7
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ✅ PASSED
+  Final Score: 0.803 (threshold: 0.700)
+  Metric Breakdown:
+    • semantic     : 0.941
+    • keyword      : 0.571
+    • bleu         : 0.047
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  A database schema is a conceptual model of a database that describes the structure and relationships of the data. It defines the tables, columns, and relationships between them, as well as the constraints and rules that govern the data. The schema is used to design and plan the database, and it serves as a blueprint for the actual database that will be created. It is typically represented in a diagram or in a set of tables and relationships. The schema is used to ensure that the database is designed in a consistent and efficient manner, and it provides a clear and organized way of storing and retrieving data.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: book_authors
+  Question: Tell me about the authors of the book
+  Threshold: 0.65
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.508 (threshold: 0.650)
+  Metric Breakdown:
+    • semantic     : 0.813
+    • keyword      : 0.000
+    • bleu         : 0.002
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  The book is titled "Database Systems: A Practical Approach to Data Management and Database Design" and was authored by Peter J. Scheid and Michael J. Stonebraker. The book was published in 1997 by Addison-Wesley.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: aries_atomicity
+  Question: How does the recovery manager use ARIES to ensure atomicity
+  Threshold: 0.75
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.690 (threshold: 0.750)
+  Metric Breakdown:
+    • semantic     : 0.879
+    • keyword      : 0.375
+    • bleu         : 0.050
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  The recovery manager uses ARIES (Atomicity, Consistency, Isolation, Durability) to ensure atomicity by ensuring that all transactions are executed in a consistent and isolated manner, and that the database remains consistent even in the event of system failures. ARIES ensures that transactions are executed in the order they were started, and that the database remains consistent even if some transactions are rolled back. This is achieved by maintaining a set of transaction logs that record the state of the database before and after each transaction, and by using these logs to roll back transactions that fail. The recovery manager also ensures that the database remains consistent even if some transactions are committed, by using the transaction logs to restore the database to its consistent state after a failure.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: oltp_vs_analytics
+  Question: Contrast the goals of Online Transaction Processing and data analytics
+  Threshold: 0.73
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.650 (threshold: 0.730)
+  Metric Breakdown:
+    • semantic     : 0.774
+    • keyword      : 0.444
+    • bleu         : 0.040
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  The goals of Online Transaction Processing (OLTP) and data analytics are fundamentally different. OLTP is designed to handle high-volume, real-time transactions, ensuring that the system can process and respond to transactions quickly and efficiently. It aims to minimize latency and maximize throughput, ensuring that users can interact with the system without delay.
+  
+  On the other hand, data analytics focuses on extracting insights and patterns from large datasets, often using historical data to predict future trends or behaviors. Data analytics is typically used for decision-making, forecasting, and understanding customer behavior. It involves complex data analysis techniques, such as machine learning and statistical modeling, to uncover meaningful information from data.
+  
+  In summary, while OLTP is focused on real-time transaction processing, data analytics is concerned with extracting insights from historical data to inform decision-making.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: lossy_decomposition
+  Question: Show me what happens during a lossy decomposition
+  Threshold: 0.7
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.499 (threshold: 0.700)
+  Metric Breakdown:
+    • semantic     : 0.712
+    • keyword      : 0.143
+    • bleu         : 0.022
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  During a lossy decomposition, the original relation R is modified by inserting a set of tuples r' into it. The new value of v can be computed as:
+  
+  v' = σ θ (r')
+  
+  where σ θ (r') represents the projection of R onto the attribute set θ.
+  
+  Similarly, if R is modified by deleting a set of tuples d' from it, the new value of v can be computed as:
+  
+  v' = σ θ (r' - d')
+  
+  where σ θ (r' - d') represents the projection of R minus the tuples in d' onto the attribute set θ.
+  
+  The reason for this is that deleting a tuple from R can affect the projection of R onto the attribute set θ, but it does not remove all occurrences of the tuple. The remaining occurrences of the tuple are still present in the projection, but they are counted as separate occurrences. This is why the projection of R minus the tuples in d' is used instead of simply deleting the tuples from R.
+  ----------------------------------------------------------
+
+============================================================
+  SUMMARY: 2 passed, 9 failed
+============================================================
+
+.
+============================================================
+⏳ Waiting for async LLM grading to complete...
+============================================================
+
+✅ Test session complete (terminal output mode)
+
+=============================== warnings summary ===============================
+../../../../home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/lib/python3.12/site-packages/transformers/utils/hub.py:106
+  /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/lib/python3.12/site-packages/transformers/utils/hub.py:106: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 34.34s

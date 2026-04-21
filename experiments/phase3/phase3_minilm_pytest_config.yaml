@@ -13,6 +13,7 @@ max_history_turns: 3
 metrics:
 - semantic
 - keyword
+- bleu
 model_path: models/qwen2.5-1.5b-instruct-q5_k_m.gguf
 num_candidates: 50
 output_mode: terminal

@@ -37,26 +37,26 @@ BLEU / semantic similarity.
 
 Runs the production path: FAISS retrieval → cross-encoder rerank (top 5) →
 Qwen2.5-1.5B-Instruct generation → metric scoring against `expected_answer`.
-Metrics: `semantic_similarity` (all-mpnet-base-v2 cosine, weight 0.7) and
-`keyword_similarity` (keyword coverage in generated answer, weight 0.3). No
-BLEU metric in the repo — we note that and substitute semantic similarity
-alone, which is the proposal's other required dimension.
+Metrics: `semantic_similarity` (all-mpnet-base-v2 cosine, weight 0.7),
+`keyword_similarity` (keyword coverage in generated answer, weight 0.3),
+and `bleu` (sentence-BLEU-4 with method-1 smoothing, reported alongside
+but weight 0 in the final score so we don't perturb the existing scorer).
 
-Qwen4B variant runs with embedder + generator on the V100 (rebuilt
-llama-cpp-python wheel with `-DCMAKE_CUDA_ARCHITECTURES=70`). The other
-variants run the embedder on CUDA (via sentence-transformers) and the
-generator on CPU — this matches the `sentence-transformers` backend's
-production configuration.
+All four variants run with the generator (Qwen2.5-1.5B) on the V100 via
+`llama-cpp-python` (rebuilt from source with `-DCMAKE_CUDA_ARCHITECTURES=70`
+for sm_70). The embedder only runs for the 11 query-embeds during pytest
+(trivial), so wall-time is dominated by LLM generation.
 
-| Variant | n | semantic_similarity | keyword_similarity | final_score | wall (s) |
-|---|---|---|---|---|---|
-| Qwen3-Embedding-4B (V100) | 11 | 0.762 | 0.301 | 0.589 | 413 |
-| Nomic-v1.5 (GPT4All, CPU) | 11 | 0.762‡ | 0.260‡ | 0.574‡ | 722 |
-| Nomic-v1.5 (sentence-transformers, V100) | 11 | 0.762 | 0.260 | 0.574 | 722 |
-| all-MiniLM-L6-v2 (sentence-transformers, V100) | 11 | 0.775 | 0.320 | 0.604 | 688 |
+| Variant | n | semantic_similarity | keyword_similarity | bleu | final_score | wall (s) |
+|---|---|---|---|---|---|---|
+| Qwen3-Embedding-4B (V100) | 11 | 0.761 | 0.310 | 0.026 | 0.592 | 44 |
+| Nomic-v1.5 (GPT4All, CPU) | 11 | 0.735‡ | 0.346‡ | 0.032‡ | 0.589‡ | 36‡ |
+| Nomic-v1.5 (sentence-transformers, V100) | 11 | 0.735 | 0.346 | 0.032 | 0.589 | 36 |
+| all-MiniLM-L6-v2 (sentence-transformers, V100) | 11 | 0.778 | 0.310 | 0.026 | 0.603 | 39 |
 
 (Weighted `final_score = 0.7*semantic + 0.3*keyword`. Wall time is pytest
-wall-clock — dominated by CPU LLM generation on this node, not embedding.)
+wall-clock with warm GGUF page-cache; a cold first-run adds ~270 s for
+Qwen4B embedder load and ~10 s for the lightweight variants.)
 
 *† Projected from a 100-chunk sample (2.7 s/chunk on CPU; GPT4All's CUDA build on this node requires libcublas.so.11, which is absent).*
 *‡ Retrieval quality for GPT4All Nomic was not re-computed — GPT4All and ST wrap the same Nomic-embed-text-v1.5 weights and differ only by quantization (f16 vs fp32), so we reuse the ST numbers. A dedicated end-to-end GPT4All quality run would cost ~2h just for index building.*
@@ -82,16 +82,18 @@ wall-clock — dominated by CPU LLM generation on this node, not embedding.)
    stronger (`sim@10=0.347` vs `0.239` for Nomic, `0.219` for MiniLM;
    `kw@10=0.30` vs `0.04` vs `0.12`). But once we add the cross-encoder
    reranker and the Qwen2.5-1.5B generator, end-to-end `semantic_similarity`
-   is statistically indistinguishable: 0.762 / 0.762 / 0.775 for
-   Qwen4B / Nomic / MiniLM. `final_score` lands at 0.589 / 0.574 / 0.604 —
-   MiniLM slightly edges Qwen4B and Nomic trails it by only 1.5 points,
-   despite Nomic's much weaker first-stage retrieval. The reranker is doing
-   meaningful rescue work — it starts from top-50 FAISS candidates and
-   selects the best 5 — so first-stage recall just needs to be high enough
-   for the right chunk to be in the pool. This is a non-obvious result and
-   it changes the conclusion a student should draw from Phase 3: on this
-   corpus, **lightweight embedders are near drop-in-replaceable when the
-   rest of the pipeline is intact**.
+   is statistically indistinguishable: 0.761 / 0.735 / 0.778 for
+   Qwen4B / Nomic / MiniLM. `final_score` lands at 0.592 / 0.589 / 0.603 —
+   all three within ~1.5 points, with MiniLM actually leading. The reranker
+   is doing meaningful rescue work — it starts from top-50 FAISS candidates
+   and selects the best 5 — so first-stage recall just needs to be high
+   enough for the right chunk to be in the pool. This is a non-obvious
+   result and it changes the conclusion a student should draw from Phase 3:
+   on this corpus, **lightweight embedders are near drop-in-replaceable
+   when the rest of the pipeline is intact**. BLEU is roughly equal across
+   variants (0.026–0.032), which isn't surprising — BLEU penalizes the
+   paraphrasing an LLM tends to produce, so it saturates at low values for
+   all generative-RAG outputs.
 
 2. **Throughput shows the promised speedup and it compounds.** On the same
    V100, ST-Nomic ingests 2,664 chunks in 126 s vs the Qwen4B A100 baseline

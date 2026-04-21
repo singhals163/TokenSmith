@@ -6,87 +6,99 @@
     "embed_backend": "llama_cpp",
     "gen_model": "models/qwen2.5-1.5b-instruct-q5_k_m.gguf",
     "pytest_exit": 0,
-    "wall_time_s": 412.8,
+    "wall_time_s": 44.4,
     "n_benchmarks": 11,
-    "mean_semantic_similarity": 0.7615996165709062,
-    "mean_keyword_similarity": 0.3014069264069264,
-    "mean_final_score": 0.5890273577594137,
+    "mean_semantic_similarity": 0.7609984143213793,
+    "mean_keyword_similarity": 0.30952380952380953,
+    "mean_bleu": 0.026111913184262925,
+    "mean_final_score": 0.5916954375222906,
     "per_benchmark": [
       {
         "id": "aggregation_grouping",
-        "semantic_similarity": 0.683468222618103,
+        "semantic_similarity": 0.6600316762924194,
         "keyword_similarity": 0.3333333333333333,
-        "final_score": 0.5521676391363143,
+        "bleu_similarity": 0.002378092334739935,
+        "final_score": 0.537519797682762,
         "passed": false
       },
       {
         "id": "acid_properties",
-        "semantic_similarity": 0.7606328129768372,
+        "semantic_similarity": 0.7941686511039734,
         "keyword_similarity": 0.5,
-        "final_score": 0.6628955081105232,
+        "bleu_similarity": 0.00848721901467176,
+        "final_score": 0.6838554069399834,
         "passed": false
       },
       {
         "id": "bptree",
-        "semantic_similarity": 0.7908688187599182,
+        "semantic_similarity": 0.7431272864341736,
         "keyword_similarity": 0.0,
-        "final_score": 0.4942930117249489,
+        "bleu_similarity": 0.002947604394137389,
+        "final_score": 0.4644545540213585,
         "passed": false
       },
       {
         "id": "fd_normalization",
-        "semantic_similarity": 0.4457241892814636,
+        "semantic_similarity": 0.45381036400794983,
         "keyword_similarity": 0.0,
-        "final_score": 0.27857761830091476,
+        "bleu_similarity": 0.015954951989680166,
+        "final_score": 0.28363147750496864,
         "passed": false
       },
       {
         "id": "sql_isolation",
-        "semantic_similarity": 0.8195890188217163,
-        "keyword_similarity": 0.125,
-        "final_score": 0.5591181367635726,
-        "passed": false
+        "semantic_similarity": 0.8277848958969116,
+        "keyword_similarity": 0.5,
+        "bleu_similarity": 0.02114435996941418,
+        "final_score": 0.7048655599355698,
+        "passed": true
       },
       {
         "id": "primary_foreign_keys",
-        "semantic_similarity": 0.9138027429580688,
+        "semantic_similarity": 0.9197824001312256,
         "keyword_similarity": 0.6666666666666666,
-        "final_score": 0.8211267143487929,
+        "bleu_similarity": 0.09231123282639567,
+        "final_score": 0.8248640000820159,
         "passed": true
       },
       {
         "id": "database_schema",
-        "semantic_similarity": 0.930863082408905,
-        "keyword_similarity": 0.5714285714285714,
-        "final_score": 0.7960751407912798,
+        "semantic_similarity": 0.9209666848182678,
+        "keyword_similarity": 0.42857142857142855,
+        "bleu_similarity": 0.04696034015981805,
+        "final_score": 0.7363184637257031,
         "passed": true
       },
       {
         "id": "book_authors",
-        "semantic_similarity": 0.7430222630500793,
+        "semantic_similarity": 0.7742000818252563,
         "keyword_similarity": 0.0,
-        "final_score": 0.4643889144062996,
+        "bleu_similarity": 0.0004551251867660221,
+        "final_score": 0.4838750511407852,
         "passed": false
       },
       {
         "id": "aries_atomicity",
-        "semantic_similarity": 0.8454754948616028,
+        "semantic_similarity": 0.8633484244346619,
         "keyword_similarity": 0.5,
-        "final_score": 0.7159221842885017,
+        "bleu_similarity": 0.034194023365786474,
+        "final_score": 0.7270927652716637,
         "passed": false
       },
       {
         "id": "oltp_vs_analytics",
-        "semantic_similarity": 0.7652351260185242,
+        "semantic_similarity": 0.7728695869445801,
         "keyword_similarity": 0.3333333333333333,
-        "final_score": 0.6032719537615775,
+        "bleu_similarity": 0.04003878396357324,
+        "final_score": 0.6080434918403624,
         "passed": false
       },
       {
         "id": "lossy_decomposition",
-        "semantic_similarity": 0.6789140105247498,
-        "keyword_similarity": 0.2857142857142857,
-        "final_score": 0.5314641137208257,
+        "semantic_similarity": 0.640892505645752,
+        "keyword_similarity": 0.14285714285714285,
+        "bleu_similarity": 0.022359311821909304,
+        "final_score": 0.4541292446000235,
         "passed": false
       }
     ]
@@ -98,87 +110,99 @@
     "embed_backend": "sentence_transformers",
     "gen_model": "models/qwen2.5-1.5b-instruct-q5_k_m.gguf",
     "pytest_exit": 0,
-    "wall_time_s": 721.5,
+    "wall_time_s": 36.2,
     "n_benchmarks": 11,
-    "mean_semantic_similarity": 0.7617539682171561,
-    "mean_keyword_similarity": 0.2602813852813853,
-    "mean_final_score": 0.5737017496162421,
+    "mean_semantic_similarity": 0.734590543942018,
+    "mean_keyword_similarity": 0.34624819624819625,
+    "mean_bleu": 0.03223090188119425,
+    "mean_final_score": 0.5889621635568348,
     "per_benchmark": [
       {
         "id": "aggregation_grouping",
-        "semantic_similarity": 0.7182449102401733,
+        "semantic_similarity": 0.668142557144165,
         "keyword_similarity": 0.3333333333333333,
-        "final_score": 0.5739030689001082,
+        "bleu_similarity": 0.0021045832110477116,
+        "final_score": 0.542589098215103,
         "passed": false
       },
       {
         "id": "acid_properties",
-        "semantic_similarity": 0.8024286031723022,
+        "semantic_similarity": 0.8095312714576721,
         "keyword_similarity": 0.5,
-        "final_score": 0.6890178769826889,
+        "bleu_similarity": 0.006554117728186284,
+        "final_score": 0.6934570446610451,
         "passed": false
       },
       {
         "id": "bptree",
-        "semantic_similarity": 0.754662036895752,
-        "keyword_similarity": 0.0,
-        "final_score": 0.47166377305984497,
+        "semantic_similarity": 0.7911884188652039,
+        "keyword_similarity": 0.2,
+        "bleu_similarity": 0.002126073153284921,
+        "final_score": 0.5694927617907524,
         "passed": false
       },
       {
         "id": "fd_normalization",
-        "semantic_similarity": 0.40572962164878845,
-        "keyword_similarity": 0.0,
-        "final_score": 0.2535810135304928,
+        "semantic_similarity": 0.4641186594963074,
+        "keyword_similarity": 0.2,
+        "bleu_similarity": 0.006284170809827286,
+        "final_score": 0.36507416218519206,
         "passed": false
       },
       {
         "id": "sql_isolation",
-        "semantic_similarity": 0.8301762342453003,
-        "keyword_similarity": 0.25,
-        "final_score": 0.6126101464033127,
+        "semantic_similarity": 0.7072829008102417,
+        "keyword_similarity": 0.375,
+        "bleu_similarity": 0.02768500477749,
+        "final_score": 0.5826768130064011,
         "passed": false
       },
       {
         "id": "primary_foreign_keys",
-        "semantic_similarity": 0.904270589351654,
-        "keyword_similarity": 0.5,
-        "final_score": 0.7526691183447838,
+        "semantic_similarity": 0.909077525138855,
+        "keyword_similarity": 0.6666666666666666,
+        "bleu_similarity": 0.12224706895811521,
+        "final_score": 0.8181734532117843,
         "passed": true
       },
       {
         "id": "database_schema",
-        "semantic_similarity": 0.930961012840271,
-        "keyword_similarity": 0.42857142857142855,
-        "final_score": 0.7425649187394551,
+        "semantic_similarity": 0.9234403967857361,
+        "keyword_similarity": 0.5714285714285714,
+        "bleu_similarity": 0.04881933661511932,
+        "final_score": 0.7914359622767992,
         "passed": true
       },
       {
         "id": "book_authors",
-        "semantic_similarity": 0.5974199771881104,
+        "semantic_similarity": 0.41150495409965515,
         "keyword_similarity": 0.0,
-        "final_score": 0.37338748574256897,
+        "bleu_similarity": 0.006441549861610228,
+        "final_score": 0.25719059631228447,
         "passed": false
       },
       {
         "id": "aries_atomicity",
-        "semantic_similarity": 0.8439815640449524,
+        "semantic_similarity": 0.849410891532898,
         "keyword_similarity": 0.375,
-        "final_score": 0.6681134775280952,
+        "bleu_similarity": 0.04905334717717161,
+        "final_score": 0.6715068072080612,
         "passed": false
       },
       {
         "id": "oltp_vs_analytics",
-        "semantic_similarity": 0.7977873086929321,
-        "keyword_similarity": 0.3333333333333333,
-        "final_score": 0.6236170679330825,
+        "semantic_similarity": 0.8101333975791931,
+        "keyword_similarity": 0.4444444444444444,
+        "bleu_similarity": 0.06432792088624907,
+        "final_score": 0.6730000401536623,
         "passed": false
       },
       {
         "id": "lossy_decomposition",
-        "semantic_similarity": 0.7936317920684814,
+        "semantic_similarity": 0.7366650104522705,
         "keyword_similarity": 0.14285714285714285,
-        "final_score": 0.5495912986142295,
+        "bleu_similarity": 0.018896747515035107,
+        "final_score": 0.5139870601040977,
         "passed": false
       }
     ]
@@ -190,87 +214,99 @@
     "embed_backend": "sentence_transformers",
     "gen_model": "models/qwen2.5-1.5b-instruct-q5_k_m.gguf",
     "pytest_exit": 0,
-    "wall_time_s": 688.0,
+    "wall_time_s": 38.9,
     "n_benchmarks": 11,
-    "mean_semantic_similarity": 0.7748992795293982,
-    "mean_keyword_similarity": 0.3196248196248196,
-    "mean_final_score": 0.6041713570651812,
+    "mean_semantic_similarity": 0.778491654179313,
+    "mean_keyword_similarity": 0.3098845598845599,
+    "mean_bleu": 0.026134846781830746,
+    "mean_final_score": 0.6027639938187805,
     "per_benchmark": [
       {
         "id": "aggregation_grouping",
-        "semantic_similarity": 0.7291224598884583,
+        "semantic_similarity": 0.7378948926925659,
         "keyword_similarity": 0.3333333333333333,
-        "final_score": 0.5807015374302863,
+        "bleu_similarity": 0.0036387342198561804,
+        "final_score": 0.5861843079328536,
         "passed": false
       },
       {
         "id": "acid_properties",
-        "semantic_similarity": 0.8180704712867737,
+        "semantic_similarity": 0.8181172609329224,
         "keyword_similarity": 0.5,
-        "final_score": 0.6987940445542336,
+        "bleu_similarity": 0.00562213114187541,
+        "final_score": 0.6988232880830765,
         "passed": false
       },
       {
         "id": "bptree",
-        "semantic_similarity": 0.6866046190261841,
+        "semantic_similarity": 0.6862132549285889,
         "keyword_similarity": 0.0,
-        "final_score": 0.42912788689136505,
+        "bleu_similarity": 0.0012001161769313914,
+        "final_score": 0.42888328433036804,
         "passed": false
       },
       {
         "id": "fd_normalization",
-        "semantic_similarity": 0.43030521273612976,
+        "semantic_similarity": 0.45605218410491943,
         "keyword_similarity": 0.0,
-        "final_score": 0.2689407579600811,
+        "bleu_similarity": 0.002099071737252447,
+        "final_score": 0.28503261506557465,
         "passed": false
       },
       {
         "id": "sql_isolation",
-        "semantic_similarity": 0.8373849987983704,
-        "keyword_similarity": 0.625,
-        "final_score": 0.7577406242489815,
-        "passed": true
+        "semantic_similarity": 0.841195821762085,
+        "keyword_similarity": 0.375,
+        "bleu_similarity": 0.0037986212812331447,
+        "final_score": 0.6663723886013031,
+        "passed": false
       },
       {
         "id": "primary_foreign_keys",
-        "semantic_similarity": 0.9160255789756775,
+        "semantic_similarity": 0.9045684337615967,
         "keyword_similarity": 0.6666666666666666,
-        "final_score": 0.8225159868597983,
+        "bleu_similarity": 0.10971861000464028,
+        "final_score": 0.8153552711009978,
         "passed": true
       },
       {
         "id": "database_schema",
-        "semantic_similarity": 0.9342284202575684,
-        "keyword_similarity": 0.42857142857142855,
-        "final_score": 0.7446070483752659,
+        "semantic_similarity": 0.9414601922035217,
+        "keyword_similarity": 0.5714285714285714,
+        "bleu_similarity": 0.04723014937449164,
+        "final_score": 0.8026983344129153,
         "passed": true
       },
       {
         "id": "book_authors",
-        "semantic_similarity": 0.7549224495887756,
+        "semantic_similarity": 0.8131918907165527,
         "keyword_similarity": 0.0,
-        "final_score": 0.47182653099298477,
+        "bleu_similarity": 0.0018556968031269196,
+        "final_score": 0.5082449316978455,
         "passed": false
       },
       {
         "id": "aries_atomicity",
-        "semantic_similarity": 0.8699228763580322,
+        "semantic_similarity": 0.8789365887641907,
         "keyword_similarity": 0.375,
-        "final_score": 0.6843267977237701,
+        "bleu_similarity": 0.050384554614461514,
+        "final_score": 0.6899603679776192,
         "passed": false
       },
       {
         "id": "oltp_vs_analytics",
-        "semantic_similarity": 0.749427080154419,
+        "semantic_similarity": 0.7735156416893005,
         "keyword_similarity": 0.4444444444444444,
-        "final_score": 0.6350585917631785,
+        "bleu_similarity": 0.04002787569830176,
+        "final_score": 0.6501139427224795,
         "passed": false
       },
       {
         "id": "lossy_decomposition",
-        "semantic_similarity": 0.7978779077529907,
+        "semantic_similarity": 0.7122620344161987,
         "keyword_similarity": 0.14285714285714285,
-        "final_score": 0.5522451209170478,
+        "bleu_similarity": 0.0219077535479675,
+        "final_score": 0.49873520008155275,
         "passed": false
       }
     ]

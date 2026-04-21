@@ -14,11 +14,12 @@
     "answer_sim@5": 0.3294053633104671,
     "answer_sim@10": 0.34689551862803375,
     "mean_emb_ms": 52.8126558796926,
-    "pytest_semantic_similarity": 0.7615996165709062,
-    "pytest_keyword_similarity": 0.3014069264069264,
-    "pytest_final_score": 0.5890273577594137,
+    "pytest_semantic_similarity": 0.7609984143213793,
+    "pytest_keyword_similarity": 0.30952380952380953,
+    "pytest_bleu": 0.026111913184262925,
+    "pytest_final_score": 0.5916954375222906,
     "pytest_n": 11,
-    "pytest_wall_s": 412.8,
+    "pytest_wall_s": 44.4,
     "note": "Full corpus, V100 CUDA (rebuilt llama-cpp-python for sm_70)"
   },
   {
@@ -36,11 +37,12 @@
     "answer_sim@5": 0.17653901485556905,
     "answer_sim@10": 0.23882138525897806,
     "mean_emb_ms": 11.145023459737951,
-    "pytest_semantic_similarity": 0.7617539682171561,
-    "pytest_keyword_similarity": 0.2602813852813853,
-    "pytest_final_score": 0.5737017496162421,
+    "pytest_semantic_similarity": 0.734590543942018,
+    "pytest_keyword_similarity": 0.34624819624819625,
+    "pytest_bleu": 0.03223090188119425,
+    "pytest_final_score": 0.5889621635568348,
     "pytest_n": 11,
-    "pytest_wall_s": 721.5,
+    "pytest_wall_s": 36.2,
     "note": "Projected from 100-chunk sample \u2014 GPT4All CUDA path unavailable on this node"
   },
   {
@@ -58,11 +60,12 @@
     "answer_sim@5": 0.17653901485556905,
     "answer_sim@10": 0.23882138525897806,
     "mean_emb_ms": 11.145023459737951,
-    "pytest_semantic_similarity": 0.7617539682171561,
-    "pytest_keyword_similarity": 0.2602813852813853,
-    "pytest_final_score": 0.5737017496162421,
+    "pytest_semantic_similarity": 0.734590543942018,
+    "pytest_keyword_similarity": 0.34624819624819625,
+    "pytest_bleu": 0.03223090188119425,
+    "pytest_final_score": 0.5889621635568348,
     "pytest_n": 11,
-    "pytest_wall_s": 721.5,
+    "pytest_wall_s": 36.2,
     "note": "Full corpus, V100 CUDA"
   },
   {
@@ -80,11 +83,12 @@
     "answer_sim@5": 0.18300555307756772,
     "answer_sim@10": 0.21891466324979608,
     "mean_emb_ms": 52.92279010807926,
-    "pytest_semantic_similarity": 0.7748992795293982,
-    "pytest_keyword_similarity": 0.3196248196248196,
-    "pytest_final_score": 0.6041713570651812,
+    "pytest_semantic_similarity": 0.778491654179313,
+    "pytest_keyword_similarity": 0.3098845598845599,
+    "pytest_bleu": 0.026134846781830746,
+    "pytest_final_score": 0.6027639938187805,
     "pytest_n": 11,
-    "pytest_wall_s": 688.0,
+    "pytest_wall_s": 38.9,
     "note": "Full corpus, V100 CUDA"
   }
 ]

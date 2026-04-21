@@ -5,6 +5,7 @@ Registered metric: KeywordMatchMetric(name='keyword')
 Registered metric: NLIEntailmentMetric(name='nli')
 Skipping AsyncLLMJudgeMetric: ValueError: No API key was provided. Please pass a valid API key. Learn how to create an API key at https://ai.google.dev/gemini-api/docs/api-key.
 Registered metric: ChunkRetrievalMetric(name='chunk_retrieval')
+Registered metric: BleuMetric(name='bleu')
 
 ============================================================
   TokenSmith Benchmark Configuration
@@ -16,7 +17,7 @@ Registered metric: ChunkRetrievalMetric(name='chunk_retrieval')
   Golden Chunks:      False
   HyDE Enabled:       False
   Output Mode:        terminal
-  Metrics:            semantic, keyword
+  Metrics:            semantic, keyword, bleu
 ============================================================
 
 
@@ -29,14 +30,15 @@ Registered metric: ChunkRetrievalMetric(name='chunk_retrieval')
 llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of the model will not be utilized
 
   ❌ FAILED
-  Final Score: 0.574 (threshold: 0.800)
+  Final Score: 0.543 (threshold: 0.800)
   Metric Breakdown:
-    • semantic     : 0.718
+    • semantic     : 0.668
     • keyword      : 0.333
+    • bleu         : 0.002
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  Aggregation with grouping is a process in which data is grouped together based on certain criteria, and then the sum, average, or other aggregate function is calculated for each group. This is useful for summarizing large datasets and identifying patterns or trends. For example, if you have a dataset of sales data, you might group the data by product category and then calculate the total sales for each category. This allows you to quickly identify which products are the most popular or which categories are the most profitable.
+  Aggregation with grouping is a process in which data is grouped together based on certain criteria, and then summarized or analyzed to provide insights or conclusions. This process involves selecting a subset of data that meets the specified criteria and then performing calculations or analysis on that subset. The results of the aggregation and grouping can then be used to draw conclusions or make decisions based on the data. Aggregation with grouping is commonly used in data analysis and reporting to provide a summary of data and to identify patterns or trends. It is a useful tool for data analysis and decision-making, as it allows for the identification of important information and the identification of areas that require further investigation.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -47,14 +49,15 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ❌ FAILED
-  Final Score: 0.689 (threshold: 0.820)
+  Final Score: 0.693 (threshold: 0.820)
   Metric Breakdown:
-    • semantic     : 0.802
+    • semantic     : 0.810
     • keyword      : 0.500
+    • bleu         : 0.007
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  The ACID properties of transactions are Atomicity, Consistency, Isolation, and Durability. These properties ensure that transactions are processed reliably and consistently, even in the presence of errors or failures. Atomicity ensures that all parts of a transaction are completed or none of them are. Consistency ensures that the database remains in a valid state after the transaction is completed. Isolation ensures that transactions are processed independently of each other, even if they are concurrent. Durability ensures that once a transaction is committed, its changes are permanent and cannot be rolled back.
+  The ACID properties of transactions are Atomicity, Consistency, Isolation, and Durability. These properties ensure that transactions are processed reliably and consistently, even in the presence of errors or failures. Atomicity means that all parts of a transaction are treated as a single unit of work, so if any part fails, the entire transaction fails. Consistency means that the database remains consistent before and after the transaction. Isolation means that transactions are processed in isolation, so that the effects of one transaction do not interfere with another. Durability means that once a transaction is committed, its effects are permanent, even in the event of a system failure.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -65,18 +68,19 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ❌ FAILED
-  Final Score: 0.472 (threshold: 0.780)
+  Final Score: 0.569 (threshold: 0.780)
   Metric Breakdown:
-    • semantic     : 0.755
-    • keyword      : 0.000
+    • semantic     : 0.791
+    • keyword      : 0.200
+    • bleu         : 0.002
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  A B+ tree index organizes keys in a hierarchical structure, where each node contains a subset of the keys and points to the child nodes that contain the remaining keys. This allows for efficient search, insert, and delete operations on disk-based access.
+  A B+ tree index organizes keys in a way that allows for efficient search, insert, and delete operations. The keys are stored in a tree structure, with each node containing a subset of the keys. The root node contains the smallest keys, and each subsequent node contains the next smallest keys. This allows for efficient traversal of the tree, as the search can be performed by comparing the target key to the root node's keys.
   
-  The B+ tree index supports search by traversing the tree from the root to a leaf node, where the desired key is found. Insertions and deletions are performed by moving nodes up or down the tree as necessary, maintaining the B+ tree properties.
+  The B+ tree index also supports search, insert, and delete operations by maintaining a balance between the number of keys in each node and the number of children. When a node becomes too full, it is split into two nodes, and the keys are redistributed. This helps to maintain the balance of the tree and ensures that the search operations are performed efficiently.
   
-  The B+ tree is preferred over binary trees for disk-based access because it allows for efficient storage and retrieval of large amounts of data. The B+ tree's structure minimizes the number of disk accesses required to perform operations, making it an efficient choice for database indexing.
+  B+ trees are preferred over binary trees for disk-based access because they are more efficient for disk-based access. Binary trees require a large amount of memory to store the keys, as each node must contain a large number of keys. This can lead to memory issues and slow performance. B+ trees, on the other hand, only require a small amount of memory to store the keys, as each node only contains a subset of the keys. This makes them more suitable for disk-based access, where memory is limited. Additionally, B+ trees are more efficient for disk-based access because they can be split and merged more easily, which helps to maintain the balance of the tree and ensures that the search operations are performed
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -87,14 +91,15 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ❌ FAILED
-  Final Score: 0.254 (threshold: 0.700)
+  Final Score: 0.365 (threshold: 0.700)
   Metric Breakdown:
-    • semantic     : 0.406
-    • keyword      : 0.000
+    • semantic     : 0.464
+    • keyword      : 0.200
+    • bleu         : 0.006
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  Functional dependencies are relationships between attributes in a database that allow us to determine the values of one attribute based on the values of another attribute or attributes. In other words, if we know the values of some attributes, we can determine the value of another attribute or attributes. For example, if we know the values of the attributes "A" and "B", we can determine the value of the attribute "C" based on the functional dependency "A -> C".
+  Functional dependencies are relationships between attributes in a database that hold true under certain conditions. Specifically, they are a type of logical dependency that describes how the values of one or more attributes (called the "left-hand side" or "LHS") are determined by the values of another attribute (called the "right-hand side" or "RHS"). In other words, a functional dependency states that the RHS can be determined from the LHS, without any additional information. For example, if we have a database table with columns A, B, and C, and we know that A determines B, then we can say that A → B is a functional dependency. This means that if we know the value of A, we can determine the value of B without knowing the value of C. Functional dependencies are an important concept in database design and normalization, as they help ensure that the database remains consistent and accurate.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -105,20 +110,19 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ❌ FAILED
-  Final Score: 0.613 (threshold: 0.700)
+  Final Score: 0.583 (threshold: 0.700)
   Metric Breakdown:
-    • semantic     : 0.830
-    • keyword      : 0.250
+    • semantic     : 0.707
+    • keyword      : 0.375
+    • bleu         : 0.028
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  SQL provides two types of isolation guarantees by default:
+  SQL provides implicit row-level isolation guarantees by default. This means that when you execute a SELECT statement, the database ensures that you see only the data that was committed before your transaction started. This is known as the "read committed" isolation level.
   
-  1. Serializable isolation: This is the highest level of isolation and guarantees that transactions will be executed in the order they were started. It also ensures that the order of rows returned by a SELECT statement is the same as the order in which they were inserted or updated.
+  The other isolation levels (read uncommitted, read committed with serializable, and repeatable read) are provided explicitly by the user or the application, and they offer more detailed control over the transaction's visibility of data. However, they are not the default behavior for SELECT statements in SQL.
   
-  2. Read committed isolation: This is the lowest level of isolation and guarantees that transactions will be executed in the order they were started. It also ensures that the order of rows returned by a SELECT statement is the same as the order in which they were inserted or updated.
-  
-  <<<ENDANSWER>>
+  It's important to note that the default isolation level can be changed using the SET TRANSACTION ISOLATION LEVEL statement, allowing you to choose the level that best suits your application's requirements.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -129,20 +133,21 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ✅ PASSED
-  Final Score: 0.753 (threshold: 0.720)
+  Final Score: 0.818 (threshold: 0.720)
   Metric Breakdown:
-    • semantic     : 0.904
-    • keyword      : 0.500
+    • semantic     : 0.909
+    • keyword      : 0.667
+    • bleu         : 0.122
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  Primary keys and foreign keys are two important concepts in database design and management.
+  Primary keys and foreign keys are two types of constraints used in database management to ensure data integrity and establish relationships between tables.
   
-  Primary keys are used to uniquely identify each record in a table. They are a single column or combination of columns that together uniquely identify each record. Primary keys are used to ensure data integrity and to allow for efficient querying and updating of records.
+  1. Primary Keys: A primary key is a unique identifier for each record in a table. It is a column or a combination of columns that uniquely identifies each record. The primary key ensures that each record is distinct and cannot be duplicated. It is used to uniquely identify a record in a table.
   
-  Foreign keys, on the other hand, are used to establish relationships between tables. They are columns in a table that reference the primary key of another table. Foreign keys are used to enforce referential integrity, which means that the data in the foreign key column must match the primary key in the referenced table. This ensures that the data in the foreign key column is consistent and accurate.
+  2. Foreign Keys: A foreign key is a column or a combination of columns in a table that references the primary key of another table. It establishes a relationship between two tables. The foreign key ensures that the referenced record exists in the referenced table. It is used to maintain referential integrity, ensuring that the data in the child table is consistent with the data in the parent table.
   
-  In summary, primary keys are used to uniquely identify records, while foreign keys are used to establish relationships between tables and enforce referential integrity.
+  In summary, primary keys are used to uniquely identify records in a table, while foreign keys are used to establish relationships between tables and ensure data consistency.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -153,14 +158,15 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ✅ PASSED
-  Final Score: 0.743 (threshold: 0.700)
+  Final Score: 0.791 (threshold: 0.700)
   Metric Breakdown:
-    • semantic     : 0.931
-    • keyword      : 0.429
+    • semantic     : 0.923
+    • keyword      : 0.571
+    • bleu         : 0.049
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  A database schema is a conceptual representation of the structure of a database, including the tables, columns, and relationships between them. It defines the logical organization of the data and how it is stored and retrieved. The schema is used to design and plan the database, and it serves as a blueprint for the database's physical implementation. It is typically created before the actual database is built and is used to guide the design of the database's tables and their relationships. The schema is also used to ensure that the database meets the requirements of the application that will use it.
+  A database schema is a blueprint or design that defines the structure and organization of a database. It outlines the tables, columns, and relationships between them, as well as the constraints and rules that govern the data within the database. The schema serves as a guide for creating and maintaining the database, ensuring consistency and efficiency in data management. It is typically created by a database administrator or developer and is used to create the actual database tables and indexes. The schema is crucial for ensuring data integrity and facilitating efficient data retrieval and manipulation.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -171,14 +177,15 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ❌ FAILED
-  Final Score: 0.373 (threshold: 0.650)
+  Final Score: 0.257 (threshold: 0.650)
   Metric Breakdown:
-    • semantic     : 0.597
+    • semantic     : 0.412
     • keyword      : 0.000
+    • bleu         : 0.006
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  The authors of the book are not explicitly mentioned in the provided excerpt. The excerpt appears to be a part of a larger text discussing data management and database operations. Without more context, it's not possible to identify the specific authors of the book based on the given information.
+  The book "Data Structures and Algorithms" is authored by various contributors. The book is a comprehensive guide to data structures and algorithms, covering a wide range of topics in computer science. It is designed to provide readers with a solid foundation in the principles and techniques of data structures and algorithms, as well as to help them develop the skills necessary to design and implement efficient algorithms. The book is intended for students and professionals in computer science, software engineering, and related fields. It is available in both print and digital formats, and is updated regularly to reflect the latest developments in the field.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -189,14 +196,15 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ❌ FAILED
-  Final Score: 0.668 (threshold: 0.750)
+  Final Score: 0.672 (threshold: 0.750)
   Metric Breakdown:
-    • semantic     : 0.844
+    • semantic     : 0.849
     • keyword      : 0.375
+    • bleu         : 0.049
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  The recovery manager uses ARIES (Atomicity, Consistency, Isolation, Durability) to ensure atomicity by ensuring that all transactions are completed in a sequential order, with each transaction being completed before the next one begins. This is achieved by maintaining a consistent view of the database state, where each transaction is isolated from others, and the database is made durable after each transaction is committed. ARIES ensures that the database remains consistent and that all transactions are completed in a sequential order, with each transaction being completed before the next one begins. This is achieved by maintaining a consistent view of the database state, where each transaction is isolated from others, and the database is made durable after each transaction is committed.
+  The recovery manager uses ARIES (Atomicity, Isolation, Durability) to ensure atomicity by ensuring that all operations are performed as a single, indivisible unit. ARIES guarantees that the database remains consistent and that all transactions are completed successfully or not at all. This is achieved by ensuring that the database is in a consistent state before any transactions begin, and that the database is in a consistent state after all transactions have completed. ARIES also ensures that the database remains consistent even in the event of a system failure or other unexpected circumstances.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -207,18 +215,19 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ❌ FAILED
-  Final Score: 0.624 (threshold: 0.730)
+  Final Score: 0.673 (threshold: 0.730)
   Metric Breakdown:
-    • semantic     : 0.798
-    • keyword      : 0.333
+    • semantic     : 0.810
+    • keyword      : 0.444
+    • bleu         : 0.064
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  The goals of Online Transaction Processing (OLTP) and data analytics are fundamentally different. OLTP is designed to handle high-volume, real-time transactions, ensuring that transactions are processed quickly and accurately. The primary goal is to provide a seamless and efficient experience for users, minimizing the impact of transaction processing on the overall system performance.
+  The goals of Online Transaction Processing (OLTP) and data analytics are fundamentally different. OLTP is designed to handle high-volume, real-time transactions, ensuring that the system can process and respond to a large number of requests quickly and accurately. The primary goal is to provide a seamless and efficient experience for users, minimizing response times and ensuring data integrity.
   
-  On the other hand, data analytics aims to extract valuable insights and knowledge from large datasets. The primary goal is to uncover patterns, trends, and correlations that can inform decision-making. Data analytics often involves complex algorithms and statistical models to analyze large volumes of data, providing actionable insights that can drive strategic decisions.
+  On the other hand, data analytics aims to extract insights and knowledge from large datasets. It involves analyzing historical data to identify patterns, trends, and correlations that can be used to make informed decisions. The goal is to provide actionable information that can be used to improve business operations, drive strategic decisions, and enhance customer experiences.
   
-  In summary, while OLTP focuses on real-time transaction processing and minimizing latency, data analytics focuses on extracting meaningful insights from large datasets and providing actionable knowledge.
+  In summary, OLTP focuses on real-time processing and transactional accuracy, while data analytics emphasizes the analysis of historical data to derive meaningful insights.
   ----------------------------------------------------------
 
 ────────────────────────────────────────────────────────────
@@ -229,28 +238,15 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
   🔍 Retrieving chunks...
 
   ❌ FAILED
-  Final Score: 0.550 (threshold: 0.700)
+  Final Score: 0.514 (threshold: 0.700)
   Metric Breakdown:
-    • semantic     : 0.794
+    • semantic     : 0.737
     • keyword      : 0.143
+    • bleu         : 0.019
 
   📝 Retrieved Answer:
   ----------------------------------------------------------
-  During a lossy decomposition, the process involves breaking down a complex data structure or system into simpler components, but some information is lost in the process. This means that the resulting components may not be as complete or accurate as the original structure.
-  
-  Here's a step-by-step breakdown of what happens during a lossy decomposition:
-  
-  1. **Identify the Complex Structure**: Start by identifying the complex data structure or system that needs to be decomposed. This could be a database schema, a software architecture, or any other complex system.
-  
-  2. **Decompose the Structure**: Decompose the complex structure into simpler components. This involves breaking down the original structure into smaller, more manageable parts. This step may involve removing some redundant or unnecessary information.
-  
-  3. **Loss of Information**: During the decomposition process, some information may be lost. This could be due to the simplification of the structure, the removal of redundant data, or the creation of new data that is not as detailed as the original structure.
-  
-  4. **Resulting Components**: The resulting components are simpler than the original structure. They may not have all the information or functionality that the original structure had. However, they are easier to manage and implement.
-  
-  5. **Use of Components**: The resulting components can be used in different parts of the system or in different applications. They may be used to create new, more complex structures or to replace parts of the original structure.
-  
-  6. **Performance and Efficiency**: By using simpler components, the
+  In a lossy decomposition, the goal is to decompose a complex system into simpler components while losing some information. This is done to reduce the complexity of the system and make it easier to manage or analyze. The process typically involves identifying the key components of the system and breaking it down into smaller, more manageable pieces. However, some information may be lost during this process, which can affect the accuracy or completeness of the resulting components. The specific steps involved in a lossy decomposition can vary depending on the system being decomposed and the desired level of complexity reduction.
   ----------------------------------------------------------
 
 ============================================================
@@ -270,4 +266,4 @@ llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of th
     warnings.warn(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-1 passed, 1 warning in 651.22s (0:10:51)
+1 passed, 1 warning in 31.71s
