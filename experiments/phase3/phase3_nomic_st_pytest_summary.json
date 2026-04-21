@@ -1,0 +1,92 @@
+{
+  "variant": "nomic_st",
+  "prefix": "phase3_nomic_st",
+  "embed_model": "nomic-ai/nomic-embed-text-v1.5",
+  "embed_backend": "sentence_transformers",
+  "gen_model": "models/qwen2.5-1.5b-instruct-q5_k_m.gguf",
+  "pytest_exit": 0,
+  "wall_time_s": 721.5,
+  "n_benchmarks": 11,
+  "mean_semantic_similarity": 0.7617539682171561,
+  "mean_keyword_similarity": 0.2602813852813853,
+  "mean_final_score": 0.5737017496162421,
+  "per_benchmark": [
+    {
+      "id": "aggregation_grouping",
+      "semantic_similarity": 0.7182449102401733,
+      "keyword_similarity": 0.3333333333333333,
+      "final_score": 0.5739030689001082,
+      "passed": false
+    },
+    {
+      "id": "acid_properties",
+      "semantic_similarity": 0.8024286031723022,
+      "keyword_similarity": 0.5,
+      "final_score": 0.6890178769826889,
+      "passed": false
+    },
+    {
+      "id": "bptree",
+      "semantic_similarity": 0.754662036895752,
+      "keyword_similarity": 0.0,
+      "final_score": 0.47166377305984497,
+      "passed": false
+    },
+    {
+      "id": "fd_normalization",
+      "semantic_similarity": 0.40572962164878845,
+      "keyword_similarity": 0.0,
+      "final_score": 0.2535810135304928,
+      "passed": false
+    },
+    {
+      "id": "sql_isolation",
+      "semantic_similarity": 0.8301762342453003,
+      "keyword_similarity": 0.25,
+      "final_score": 0.6126101464033127,
+      "passed": false
+    },
+    {
+      "id": "primary_foreign_keys",
+      "semantic_similarity": 0.904270589351654,
+      "keyword_similarity": 0.5,
+      "final_score": 0.7526691183447838,
+      "passed": true
+    },
+    {
+      "id": "database_schema",
+      "semantic_similarity": 0.930961012840271,
+      "keyword_similarity": 0.42857142857142855,
+      "final_score": 0.7425649187394551,
+      "passed": true
+    },
+    {
+      "id": "book_authors",
+      "semantic_similarity": 0.5974199771881104,
+      "keyword_similarity": 0.0,
+      "final_score": 0.37338748574256897,
+      "passed": false
+    },
+    {
+      "id": "aries_atomicity",
+      "semantic_similarity": 0.8439815640449524,
+      "keyword_similarity": 0.375,
+      "final_score": 0.6681134775280952,
+      "passed": false
+    },
+    {
+      "id": "oltp_vs_analytics",
+      "semantic_similarity": 0.7977873086929321,
+      "keyword_similarity": 0.3333333333333333,
+      "final_score": 0.6236170679330825,
+      "passed": false
+    },
+    {
+      "id": "lossy_decomposition",
+      "semantic_similarity": 0.7936317920684814,
+      "keyword_similarity": 0.14285714285714285,
+      "final_score": 0.5495912986142295,
+      "passed": false
+    }
+  ]
+}

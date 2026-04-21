@@ -1,0 +1,29 @@
+
+📋 Running all 11 benchmarks
+Registered metric: SemanticSimilarityMetric(name='semantic')
+Registered metric: KeywordMatchMetric(name='keyword')
+Registered metric: NLIEntailmentMetric(name='nli')
+Skipping AsyncLLMJudgeMetric: ValueError: No API key was provided. Please pass a valid API key. Learn how to create an API key at https://ai.google.dev/gemini-api/docs/api-key.
+Registered metric: ChunkRetrievalMetric(name='chunk_retrieval')
+
+============================================================
+  TokenSmith Benchmark Configuration
+============================================================
+  Generator Model:    qwen2.5-1.5b-instruct-q5_k_m.gguf
+  Embedding Model:    all-MiniLM-L6-v2
+  System Prompt:      baseline
+  Chunks Enabled:     True
+  Golden Chunks:      False
+  HyDE Enabled:       False
+  Output Mode:        terminal
+  Metrics:            semantic, keyword
+============================================================
+
+
+────────────────────────────────────────────────────────────
+  Benchmark: aggregation_grouping
+  Question: How do aggregation with grouping work?
+  Threshold: 0.8
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of the model will not be utilized

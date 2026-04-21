@@ -1,0 +1,273 @@
+
+📋 Running all 11 benchmarks
+Registered metric: SemanticSimilarityMetric(name='semantic')
+Registered metric: KeywordMatchMetric(name='keyword')
+Registered metric: NLIEntailmentMetric(name='nli')
+Skipping AsyncLLMJudgeMetric: ValueError: No API key was provided. Please pass a valid API key. Learn how to create an API key at https://ai.google.dev/gemini-api/docs/api-key.
+Registered metric: ChunkRetrievalMetric(name='chunk_retrieval')
+
+============================================================
+  TokenSmith Benchmark Configuration
+============================================================
+  Generator Model:    qwen2.5-1.5b-instruct-q5_k_m.gguf
+  Embedding Model:    nomic-embed-text-v1.5
+  System Prompt:      baseline
+  Chunks Enabled:     True
+  Golden Chunks:      False
+  HyDE Enabled:       False
+  Output Mode:        terminal
+  Metrics:            semantic, keyword
+============================================================
+
+
+────────────────────────────────────────────────────────────
+  Benchmark: aggregation_grouping
+  Question: How do aggregation with grouping work?
+  Threshold: 0.8
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+llama_context: n_ctx_seq (8192) < n_ctx_train (32768) -- the full capacity of the model will not be utilized
+
+  ❌ FAILED
+  Final Score: 0.574 (threshold: 0.800)
+  Metric Breakdown:
+    • semantic     : 0.718
+    • keyword      : 0.333
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  Aggregation with grouping is a process in which data is grouped together based on certain criteria, and then the sum, average, or other aggregate function is calculated for each group. This is useful for summarizing large datasets and identifying patterns or trends. For example, if you have a dataset of sales data, you might group the data by product category and then calculate the total sales for each category. This allows you to quickly identify which products are the most popular or which categories are the most profitable.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: acid_properties
+  Question: What are the ACID properties of transactions?
+  Threshold: 0.82
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.689 (threshold: 0.820)
+  Metric Breakdown:
+    • semantic     : 0.802
+    • keyword      : 0.500
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  The ACID properties of transactions are Atomicity, Consistency, Isolation, and Durability. These properties ensure that transactions are processed reliably and consistently, even in the presence of errors or failures. Atomicity ensures that all parts of a transaction are completed or none of them are. Consistency ensures that the database remains in a valid state after the transaction is completed. Isolation ensures that transactions are processed independently of each other, even if they are concurrent. Durability ensures that once a transaction is committed, its changes are permanent and cannot be rolled back.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: bptree
+  Question: How does a B+ tree index organize keys and support search, insert, and delete, and why is it preferred over binary trees for disk-based access
+  Threshold: 0.78
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.472 (threshold: 0.780)
+  Metric Breakdown:
+    • semantic     : 0.755
+    • keyword      : 0.000
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  A B+ tree index organizes keys in a hierarchical structure, where each node contains a subset of the keys and points to the child nodes that contain the remaining keys. This allows for efficient search, insert, and delete operations on disk-based access.
+  
+  The B+ tree index supports search by traversing the tree from the root to a leaf node, where the desired key is found. Insertions and deletions are performed by moving nodes up or down the tree as necessary, maintaining the B+ tree properties.
+  
+  The B+ tree is preferred over binary trees for disk-based access because it allows for efficient storage and retrieval of large amounts of data. The B+ tree's structure minimizes the number of disk accesses required to perform operations, making it an efficient choice for database indexing.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: fd_normalization
+  Question: What are functional dependencies?
+  Threshold: 0.7
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.254 (threshold: 0.700)
+  Metric Breakdown:
+    • semantic     : 0.406
+    • keyword      : 0.000
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  Functional dependencies are relationships between attributes in a database that allow us to determine the values of one attribute based on the values of another attribute or attributes. In other words, if we know the values of some attributes, we can determine the value of another attribute or attributes. For example, if we know the values of the attributes "A" and "B", we can determine the value of the attribute "C" based on the functional dependency "A -> C".
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: sql_isolation
+  Question: What isolation guarantees does SQL provide by default?
+  Threshold: 0.7
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.613 (threshold: 0.700)
+  Metric Breakdown:
+    • semantic     : 0.830
+    • keyword      : 0.250
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  SQL provides two types of isolation guarantees by default:
+  
+  1. Serializable isolation: This is the highest level of isolation and guarantees that transactions will be executed in the order they were started. It also ensures that the order of rows returned by a SELECT statement is the same as the order in which they were inserted or updated.
+  
+  2. Read committed isolation: This is the lowest level of isolation and guarantees that transactions will be executed in the order they were started. It also ensures that the order of rows returned by a SELECT statement is the same as the order in which they were inserted or updated.
+  
+  <<<ENDANSWER>>
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: primary_foreign_keys
+  Question: Explain primary keys and foreign keys
+  Threshold: 0.72
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ✅ PASSED
+  Final Score: 0.753 (threshold: 0.720)
+  Metric Breakdown:
+    • semantic     : 0.904
+    • keyword      : 0.500
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  Primary keys and foreign keys are two important concepts in database design and management.
+  
+  Primary keys are used to uniquely identify each record in a table. They are a single column or combination of columns that together uniquely identify each record. Primary keys are used to ensure data integrity and to allow for efficient querying and updating of records.
+  
+  Foreign keys, on the other hand, are used to establish relationships between tables. They are columns in a table that reference the primary key of another table. Foreign keys are used to enforce referential integrity, which means that the data in the foreign key column must match the primary key in the referenced table. This ensures that the data in the foreign key column is consistent and accurate.
+  
+  In summary, primary keys are used to uniquely identify records, while foreign keys are used to establish relationships between tables and enforce referential integrity.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: database_schema
+  Question: What is a database schema
+  Threshold: 0.7
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ✅ PASSED
+  Final Score: 0.743 (threshold: 0.700)
+  Metric Breakdown:
+    • semantic     : 0.931
+    • keyword      : 0.429
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  A database schema is a conceptual representation of the structure of a database, including the tables, columns, and relationships between them. It defines the logical organization of the data and how it is stored and retrieved. The schema is used to design and plan the database, and it serves as a blueprint for the database's physical implementation. It is typically created before the actual database is built and is used to guide the design of the database's tables and their relationships. The schema is also used to ensure that the database meets the requirements of the application that will use it.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: book_authors
+  Question: Tell me about the authors of the book
+  Threshold: 0.65
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.373 (threshold: 0.650)
+  Metric Breakdown:
+    • semantic     : 0.597
+    • keyword      : 0.000
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  The authors of the book are not explicitly mentioned in the provided excerpt. The excerpt appears to be a part of a larger text discussing data management and database operations. Without more context, it's not possible to identify the specific authors of the book based on the given information.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: aries_atomicity
+  Question: How does the recovery manager use ARIES to ensure atomicity
+  Threshold: 0.75
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.668 (threshold: 0.750)
+  Metric Breakdown:
+    • semantic     : 0.844
+    • keyword      : 0.375
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  The recovery manager uses ARIES (Atomicity, Consistency, Isolation, Durability) to ensure atomicity by ensuring that all transactions are completed in a sequential order, with each transaction being completed before the next one begins. This is achieved by maintaining a consistent view of the database state, where each transaction is isolated from others, and the database is made durable after each transaction is committed. ARIES ensures that the database remains consistent and that all transactions are completed in a sequential order, with each transaction being completed before the next one begins. This is achieved by maintaining a consistent view of the database state, where each transaction is isolated from others, and the database is made durable after each transaction is committed.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: oltp_vs_analytics
+  Question: Contrast the goals of Online Transaction Processing and data analytics
+  Threshold: 0.73
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.624 (threshold: 0.730)
+  Metric Breakdown:
+    • semantic     : 0.798
+    • keyword      : 0.333
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  The goals of Online Transaction Processing (OLTP) and data analytics are fundamentally different. OLTP is designed to handle high-volume, real-time transactions, ensuring that transactions are processed quickly and accurately. The primary goal is to provide a seamless and efficient experience for users, minimizing the impact of transaction processing on the overall system performance.
+  
+  On the other hand, data analytics aims to extract valuable insights and knowledge from large datasets. The primary goal is to uncover patterns, trends, and correlations that can inform decision-making. Data analytics often involves complex algorithms and statistical models to analyze large volumes of data, providing actionable insights that can drive strategic decisions.
+  
+  In summary, while OLTP focuses on real-time transaction processing and minimizing latency, data analytics focuses on extracting meaningful insights from large datasets and providing actionable knowledge.
+  ----------------------------------------------------------
+
+────────────────────────────────────────────────────────────
+  Benchmark: lossy_decomposition
+  Question: Show me what happens during a lossy decomposition
+  Threshold: 0.7
+────────────────────────────────────────────────────────────
+  🔍 Retrieving chunks...
+
+  ❌ FAILED
+  Final Score: 0.550 (threshold: 0.700)
+  Metric Breakdown:
+    • semantic     : 0.794
+    • keyword      : 0.143
+
+  📝 Retrieved Answer:
+  ----------------------------------------------------------
+  During a lossy decomposition, the process involves breaking down a complex data structure or system into simpler components, but some information is lost in the process. This means that the resulting components may not be as complete or accurate as the original structure.
+  
+  Here's a step-by-step breakdown of what happens during a lossy decomposition:
+  
+  1. **Identify the Complex Structure**: Start by identifying the complex data structure or system that needs to be decomposed. This could be a database schema, a software architecture, or any other complex system.
+  
+  2. **Decompose the Structure**: Decompose the complex structure into simpler components. This involves breaking down the original structure into smaller, more manageable parts. This step may involve removing some redundant or unnecessary information.
+  
+  3. **Loss of Information**: During the decomposition process, some information may be lost. This could be due to the simplification of the structure, the removal of redundant data, or the creation of new data that is not as detailed as the original structure.
+  
+  4. **Resulting Components**: The resulting components are simpler than the original structure. They may not have all the information or functionality that the original structure had. However, they are easier to manage and implement.
+  
+  5. **Use of Components**: The resulting components can be used in different parts of the system or in different applications. They may be used to create new, more complex structures or to replace parts of the original structure.
+  
+  6. **Performance and Efficiency**: By using simpler components, the
+  ----------------------------------------------------------
+
+============================================================
+  SUMMARY: 2 passed, 9 failed
+============================================================
+
+.
+============================================================
+⏳ Waiting for async LLM grading to complete...
+============================================================
+
+✅ Test session complete (terminal output mode)
+
+=============================== warnings summary ===============================
+../../../../home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/lib/python3.12/site-packages/transformers/utils/hub.py:106
+  /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/lib/python3.12/site-packages/transformers/utils/hub.py:106: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 651.22s (0:10:51)

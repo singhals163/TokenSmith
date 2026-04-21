@@ -1,0 +1,17 @@
+/storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/lib/python3.12/site-packages/transformers/utils/hub.py:106: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+Failed to load libllamamodel-mainline-cuda.so: dlopen: libcublas.so.11: cannot open shared object file: No such file or directory
+Failed to load libllamamodel-mainline-cuda-avxonly.so: dlopen: libcublas.so.11: cannot open shared object file: No such file or directory
+======================================================================
+Phase 3 variant : nomic_gpt4all
+Backend         : gpt4all
+Model           : nomic-embed-text-v1.5.f16.gguf
+Index prefix    : phase3_nomic_gpt4all
+Markdown        : data/textbook--extracted_markdown.md
+======================================================================
+Saved page to chunk ID map: index/sections/phase3_nomic_gpt4all_page_to_chunk_map.json
+Embedding 2,664 chunks with nomic-embed-text-v1.5.f16 ...
+Embedding backend: gpt4all
+Hardware Router: GPU detected. Forcing sequential execution to maximize VRAM throughput.
+Starting high-throughput sequential embedding...
+Encoding:   0%|          | 0/84 [00:00<?, ?it/s]Encoding:   1%|          | 1/84 [01:52<2:34:59, 112.04s/it]Encoding:   2%|▏         | 2/84 [03:39<2:29:21, 109.29s/it]

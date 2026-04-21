@@ -1,0 +1,49 @@
+/storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/lib/python3.12/site-packages/transformers/utils/hub.py:106: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+======================================================================
+Phase 3 variant : minilm
+Backend         : sentence_transformers
+Model           : sentence-transformers/all-MiniLM-L6-v2
+Index prefix    : phase3_minilm
+Markdown        : data/textbook--extracted_markdown.md
+======================================================================
+Saved page to chunk ID map: index/sections/phase3_minilm_page_to_chunk_map.json
+Embedding 2,664 chunks with all-MiniLM-L6-v2 ...
+Embedding backend: sentence_transformers
+Hardware Router: GPU detected. Forcing sequential execution to maximize VRAM throughput.
+Starting high-throughput sequential embedding...
+Batches:   0%|          | 0/84 [00:00<?, ?it/s]Batches:   1%|          | 1/84 [00:00<00:24,  3.39it/s]Batches:   4%|▎         | 3/84 [00:00<00:11,  7.09it/s]Batches:   6%|▌         | 5/84 [00:00<00:08,  8.85it/s]Batches:   8%|▊         | 7/84 [00:00<00:07,  9.82it/s]Batches:  11%|█         | 9/84 [00:00<00:07, 10.41it/s]Batches:  13%|█▎        | 11/84 [00:01<00:06, 10.80it/s]Batches:  15%|█▌        | 13/84 [00:01<00:06, 11.04it/s]Batches:  18%|█▊        | 15/84 [00:01<00:06, 11.23it/s]Batches:  20%|██        | 17/84 [00:01<00:05, 11.36it/s]Batches:  23%|██▎       | 19/84 [00:01<00:05, 11.45it/s]Batches:  25%|██▌       | 21/84 [00:02<00:05, 11.53it/s]Batches:  27%|██▋       | 23/84 [00:02<00:05, 11.59it/s]Batches:  30%|██▉       | 25/84 [00:02<00:05, 11.63it/s]Batches:  32%|███▏      | 27/84 [00:02<00:04, 11.66it/s]Batches:  35%|███▍      | 29/84 [00:02<00:04, 11.69it/s]Batches:  37%|███▋      | 31/84 [00:02<00:04, 11.71it/s]Batches:  39%|███▉      | 33/84 [00:03<00:04, 11.75it/s]Batches:  42%|████▏     | 35/84 [00:03<00:04, 11.79it/s]Batches:  44%|████▍     | 37/84 [00:03<00:03, 11.83it/s]Batches:  46%|████▋     | 39/84 [00:03<00:03, 11.85it/s]Batches:  49%|████▉     | 41/84 [00:03<00:03, 11.88it/s]Batches:  51%|█████     | 43/84 [00:03<00:03, 11.90it/s]Batches:  54%|█████▎    | 45/84 [00:04<00:03, 11.95it/s]Batches:  56%|█████▌    | 47/84 [00:04<00:03, 11.99it/s]Batches:  58%|█████▊    | 49/84 [00:04<00:02, 12.04it/s]Batches:  61%|██████    | 51/84 [00:04<00:02, 12.09it/s]Batches:  63%|██████▎   | 53/84 [00:04<00:02, 12.20it/s]Batches:  65%|██████▌   | 55/84 [00:04<00:02, 12.29it/s]Batches:  68%|██████▊   | 57/84 [00:05<00:02, 12.38it/s]Batches:  70%|███████   | 59/84 [00:05<00:02, 12.49it/s]Batches:  73%|███████▎  | 61/84 [00:05<00:01, 12.61it/s]Batches:  75%|███████▌  | 63/84 [00:05<00:01, 12.75it/s]Batches:  77%|███████▋  | 65/84 [00:05<00:01, 12.96it/s]Batches:  80%|███████▉  | 67/84 [00:05<00:01, 13.30it/s]Batches:  82%|████████▏ | 69/84 [00:05<00:01, 13.78it/s]Batches:  85%|████████▍ | 71/84 [00:06<00:00, 14.39it/s]Batches:  87%|████████▋ | 73/84 [00:06<00:00, 15.21it/s]Batches:  89%|████████▉ | 75/84 [00:06<00:00, 16.24it/s]Batches:  93%|█████████▎| 78/84 [00:06<00:00, 17.85it/s]Batches:  96%|█████████▋| 81/84 [00:06<00:00, 19.85it/s]Batches: 100%|██████████| 84/84 [00:06<00:00, 12.79it/s]
+Building FAISS index for 2,664 chunks...
+FAISS Index built successfully: phase3_minilm.faiss
+Building BM25 index for 2,664 chunks...
+BM25 Index built successfully: phase3_minilm_bm25.pkl
+Saved all index artifacts with prefix: phase3_minilm
+
+============================================================
+                 PIPELINE PROFILING RESULTS                 
+============================================================
+Function / Logic Block              | Calls    | Total Time (s)
+------------------------------------------------------------
+[Block] Step 2: Vector Embeddings Generation | 1        | 62.0754
+CachedEmbedder: Write Missing to Cache | 1        | 51.4153
+Cache: Write SQLite                 | 2664     | 51.3955
+Embedder [Main]: Sequential Batch Encoding | 1        | 6.7589
+Embedder [Main]: sentence-transformers compute | 1        | 6.7589
+CachedEmbedder: Check Cache         | 1        | 2.6077
+Cache: Read SQLite                  | 2664     | 2.5985
+Embedder [Main]: Load Model to Memory | 1        | 0.9192
+[Block] Step 4: Build BM25 Index    | 1        | 0.6253
+Helper: preprocess_for_bm25         | 2664     | 0.4321
+[Block] Extract Sections from Markdown | 1        | 0.2244
+Extraction: extract_sections_from_markdown | 1        | 0.2244
+Extraction: preprocess_extracted_section | 774      | 0.1118
+[Block] Step 1: Chunking & Metadata Parsing | 1        | 0.1006
+Chunking: DocumentChunker.chunk     | 775      | 0.0396
+Chunking: SectionRecursiveStrategy.chunk | 775      | 0.0385
+[Block] Step 5: Dump Index Artifacts | 1        | 0.0119
+[Block] Step 3: Build FAISS Index   | 1        | 0.0050
+Embedder [Main]: Restore Order      | 1        | 0.0024
+Embedder [Main]: Prepare and Sort Chunks | 1        | 0.0010
+============================================================
+
+[Phase 3] Wrote profiling + resources to experiments/phase3

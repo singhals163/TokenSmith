@@ -1,0 +1,30 @@
+chunk_mode: recursive_sections
+chunk_overlap: 200
+chunk_size: 2000
+embed_backend: sentence_transformers
+embed_model: nomic-ai/nomic-embed-text-v1.5
+enable_history: false
+ensemble_method: rrf
+gen_model: models/qwen2.5-1.5b-instruct-q5_k_m.gguf
+hyde_max_tokens: 300
+index_prefix: phase3_nomic_st
+max_gen_tokens: 300
+max_history_turns: 3
+metrics:
+- semantic
+- keyword
+model_path: models/qwen2.5-1.5b-instruct-q5_k_m.gguf
+num_candidates: 50
+output_mode: terminal
+ranker_weights:
+  bm25: 0
+  faiss: 1
+  index_keywords: 0
+rerank_mode: cross_encoder
+rerank_top_k: 5
+rrf_k: 60
+system_prompt_mode: baseline
+top_k: 10
+use_double_prompt: false
+use_hyde: false
+use_indexed_chunks: false
