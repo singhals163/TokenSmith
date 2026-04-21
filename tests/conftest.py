@@ -163,6 +163,8 @@ def config(pytestconfig):
         # Models
         "model_path": pytestconfig.getoption("--model-path") or cfg.get("model_path", "models/qwen2.5-3b-instruct-q8_0.gguf"),
         "embed_model": pytestconfig.getoption("--embed-model") or cfg.get("embed_model", os.path.join(Path(__file__).parent.parent, "models", "Qwen3-Embedding-4B-Q8_0.gguf")),
+        "embed_backend": cfg.get("embed_backend", "llama_cpp"),
+        "gen_model": cfg.get("gen_model", cfg.get("model_path", "models/qwen2.5-1.5b-instruct-q5_k_m.gguf")),
         
         # Generator
         "system_prompt_mode": pytestconfig.getoption("--system-prompt") or cfg.get("system_prompt_mode", "baseline"),

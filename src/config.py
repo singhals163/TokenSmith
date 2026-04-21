@@ -21,6 +21,7 @@ class RAGConfig:
     top_k: int = 10
     num_candidates: int = 60
     embed_model: str = "models/Qwen3-Embedding-4B-Q5_K_M.gguf"
+    embed_backend: str = "llama_cpp"  # "llama_cpp" | "gpt4all" | "sentence_transformers"
     ensemble_method: str = "rrf"
     rrf_k: int  = 60
     ranker_weights: Dict[str, float] = field(

@@ -12,7 +12,7 @@ import pickle
 import pathlib
 import re
 import json
-from typing import List, Dict
+from typing import List, Dict, Optional
 import subprocess
 
 import faiss
@@ -23,7 +23,8 @@ from src.preprocessing.chunking import DocumentChunker, ChunkConfig
 from src.preprocessing.extraction import extract_sections_from_markdown
 
 # --- NEW: Import profiler tools ---
-from src.profiler import timeit, TimerBlock, print_profile_stats
+from src.profiler import timeit, TimerBlock, print_profile_stats, PROFILE_STATS
+from src.instrumentation.resource_monitor import ResourceMonitor
 
 # ----- runtime parallelism knobs (avoid oversubscription) -----
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -63,7 +64,9 @@ def build_index(
     artifacts_dir: os.PathLike,
     index_prefix: str,
     use_multiprocessing: bool = False,
-    use_headings: bool = False
+    use_headings: bool = False,
+    embed_backend: str = "llama_cpp",
+    profile_output_dir: Optional[os.PathLike] = None,
 ) -> None:
     """
     Extract sections, chunk, embed, and build both FAISS and BM25 indexes.
@@ -164,13 +167,15 @@ def build_index(
         print(f"Saved page to chunk ID map: {output_file}")
 
 
-    with TimerBlock("[Block] Step 2: Vector Embeddings Generation"):
+    resource_monitor = ResourceMonitor(interval_s=0.5)
+    with resource_monitor, TimerBlock("[Block] Step 2: Vector Embeddings Generation"):
         print(f"Embedding {len(all_chunks):,} chunks with {pathlib.Path(embedding_model_path).stem} ...")
-        
-        # PHASE 2 OPTIMIZATION: Use the CachedEmbedder instead of standard SentenceTransformer
-        embedder = CachedEmbedder(embedding_model_path)
 
-        # PHASE 2 OPTIMIZATION: Dynamic Hardware Routing
+        # PHASE 2+3: Use CachedEmbedder with pluggable backend
+        print(f"Embedding backend: {embed_backend}")
+        embedder = CachedEmbedder(embedding_model_path, backend=embed_backend)
+
+        # PHASE 2 OPTIMIZATION: Dynamic Hardware Routing (only meaningful for llama_cpp)
         has_gpu = detect_gpu()
         if has_gpu:
             print("Hardware Router: GPU detected. Forcing sequential execution to maximize VRAM throughput.")
@@ -179,25 +184,25 @@ def build_index(
             print("Hardware Router: CPU-only environment detected.")
             should_multiprocess = use_multiprocessing
 
-        if should_multiprocess:
+        # Multi-process pool only supported for the llama_cpp backend
+        if should_multiprocess and embed_backend == "llama_cpp":
             print("Starting CPU multi-process pool for embeddings...")
-            # Let it auto-detect optimal CPU cores rather than hardcoding to 4
-            pool = embedder.start_multi_process_pool() 
+            pool = embedder.start_multi_process_pool()
             try:
                 embeddings = embedder.encode_multi_process(
-                    all_chunks, 
-                    pool, 
-                    batch_size=32
+                    all_chunks,
+                    pool,
+                    batch_size=32,
                 )
             finally:
                 embedder.stop_multi_process_pool(pool)
         else:
             print("Starting high-throughput sequential embedding...")
             embeddings = embedder.encode(
-                all_chunks, 
-                batch_size=32, # Increased batch size for optimal A100 GPU throughput
+                all_chunks,
+                batch_size=32,
                 show_progress_bar=True,
-                convert_to_numpy=True 
+                convert_to_numpy=True,
             )
 
     with TimerBlock("[Block] Step 3: Build FAISS Index"):
@@ -227,6 +232,25 @@ def build_index(
     
     # --- NEW: Print stats at the end of the indexing process ---
     print_profile_stats()
+
+    # Phase 3: persist per-run profile + resource summary alongside experiments
+    if profile_output_dir is not None:
+        out_dir = pathlib.Path(profile_output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        print_profile_stats(filepath=str(out_dir / f"{index_prefix}_profiling.txt"))
+        resources = resource_monitor.summary()
+        profile_dump = {name: dict(stats) for name, stats in PROFILE_STATS.items()}
+        with open(out_dir / f"{index_prefix}_resources.json", "w") as f:
+            json.dump({
+                "index_prefix": index_prefix,
+                "embed_backend": embed_backend,
+                "embedding_model_path": embedding_model_path,
+                "num_chunks": len(all_chunks),
+                "embedding_dim": int(embeddings.shape[1]),
+                "resources": resources,
+                "profile_stats": profile_dump,
+            }, f, indent=2)
+        print(f"[Phase 3] Wrote profiling + resources to {out_dir}")
 
 # ------------------------ Helper functions ------------------------------
 

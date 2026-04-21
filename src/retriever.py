@@ -27,11 +27,11 @@ from src.index_builder import preprocess_for_bm25
 
 _EMBED_CACHE: Dict[str, CachedEmbedder] = {}
 
-def _get_embedder(model_name: str) -> CachedEmbedder:
-    if model_name not in _EMBED_CACHE:
-        # Use the cached embedding model to avoid reloading it on every call
-        _EMBED_CACHE[model_name] = CachedEmbedder(model_name)
-    return _EMBED_CACHE[model_name]
+def _get_embedder(model_name: str, backend: str = "llama_cpp") -> CachedEmbedder:
+    key = f"{backend}::{model_name}"
+    if key not in _EMBED_CACHE:
+        _EMBED_CACHE[key] = CachedEmbedder(model_name, backend=backend)
+    return _EMBED_CACHE[key]
 
 
 # -------------------------- Read artifacts -------------------------------
@@ -89,9 +89,9 @@ class Retriever(ABC):
 class FAISSRetriever(Retriever):
     name = "faiss"
 
-    def __init__(self, index, embed_model: str):
+    def __init__(self, index, embed_model: str, embed_backend: str = "llama_cpp"):
         self.index = index
-        self.embedder = _get_embedder(embed_model)
+        self.embedder = _get_embedder(embed_model, backend=embed_backend)
 
     def get_scores(self,
                 query: str,

@@ -192,6 +192,8 @@ def get_tokensmith_answer(question, config, golden_chunks=None):
         chunk_mode=config.get("chunk_mode", "recursive_sections"),
         top_k=config.get("top_k", 10),
         embed_model=config.get("embed_model"),
+        embed_backend=config.get("embed_backend", "llama_cpp"),
+        gen_model=config.get("gen_model") or config.get("model_path"),
         ensemble_method=config.get("retrieval_method", "rrf"),
         rrf_k=60,
         ranker_weights=config.get("ranker_weights", {"faiss": 1, "bm25": 0}),
@@ -230,7 +232,7 @@ def get_tokensmith_answer(question, config, golden_chunks=None):
     )
 
     retrievers = [
-        FAISSRetriever(faiss_index, cfg.embed_model),
+        FAISSRetriever(faiss_index, cfg.embed_model, embed_backend=cfg.embed_backend),
         BM25Retriever(bm25_index)
     ]
     
