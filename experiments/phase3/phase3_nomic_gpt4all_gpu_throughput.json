@@ -1,0 +1,24 @@
+{
+  "prefix": "phase3_nomic_gpt4all_gpu",
+  "embed_backend": "gpt4all",
+  "device": "gpu",
+  "embedding_model_path": "nomic-embed-text-v1.5.f16.gguf",
+  "sample_size": 2664,
+  "total_corpus_chunks": 2664,
+  "batch_size": 32,
+  "model_load_s": 0.728,
+  "sample_encode_s": 1957.21,
+  "per_chunk_s": 0.7347,
+  "projected_full_corpus_encode_s": 1957.2,
+  "per_batch_s_mean": 23.3,
+  "per_batch_s_min": 7.095,
+  "per_batch_s_max": 26.717,
+  "resources": {
+    "peak_rss_mib": 1007.0,
+    "peak_vram_mib": 579.0,
+    "start_vram_mib": 0.0,
+    "delta_vram_mib": 579.0,
+    "samples": 3726,
+    "gpu_available": true
+  }
+}
