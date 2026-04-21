@@ -30,8 +30,11 @@ TOP_K = 5
 
 
 def _clean_chunk(text: str) -> str:
-    """docling output has per-character spacing — collapse to normal whitespace."""
-    return re.sub(r"\s+", " ", text).strip()
+    """docling output inserts a single space between every character
+    ("V a r i a b l e - l e n g t h"). Removing single spaces between
+    non-whitespace characters restores readable text before feeding into
+    MiniLM. Matches the helper in phase3_retrieval_eval.py."""
+    return re.sub(r"(?<=\S) (?=\S)", "", text).strip()
 
 
 def main() -> None:
@@ -51,7 +54,9 @@ def main() -> None:
     print(f"Loaded {len(bench)} benchmarks from {BENCHMARKS_YAML}")
 
     from sentence_transformers import SentenceTransformer, util
-    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    # Force CPU to avoid contending with any concurrent GPU job (e.g. the
+    # GPT4All Phase 3 throughput run). 2,664 MiniLM encodes on CPU is ~2 min.
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device="cpu")
 
     chunk_emb = model.encode(cleaned, batch_size=64, convert_to_tensor=True,
                              show_progress_bar=True)

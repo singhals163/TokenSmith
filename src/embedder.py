@@ -206,13 +206,19 @@ class LlamaCppEmbedder(BaseEmbedder):
 class GPT4AllEmbedder(BaseEmbedder):
     backend_name = "gpt4all"
 
-    def __init__(self, model_path: str, **kwargs):
+    def __init__(self, model_path: str, device: str = "gpu", **kwargs):
         from gpt4all import Embed4All
         self.model_path = model_path
+        self.device = device
         cache_dir = os.environ.get("GPT4ALL_MODEL_PATH") or str(Path.home() / ".cache" / "gpt4all")
         Path(cache_dir).mkdir(parents=True, exist_ok=True)
         with TimerBlock("Embedder [Main]: Load Model to Memory"):
-            self.model = Embed4All(model_name=model_path, model_path=cache_dir, n_threads=kwargs.get("n_threads"))
+            self.model = Embed4All(
+                model_name=model_path,
+                model_path=cache_dir,
+                n_threads=kwargs.get("n_threads"),
+                device=device,
+            )
 
     def encode(
         self,

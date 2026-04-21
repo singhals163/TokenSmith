@@ -33,6 +33,13 @@ VARIANTS = [
         "throughput_s_note": "Projected from 100-chunk sample — GPT4All CUDA path unavailable on this node",
     },
     {
+        "label": "Nomic-embed-text-v1.5 (GPT4All, V100 CUDA)",
+        "prefix": "phase3_nomic_gpt4all_gpu",
+        "params_m": 137,
+        "dim": 768,
+        "throughput_s_note": "Full corpus, V100 CUDA (GPT4All engine with cuda/11.8.0 libcublas on LD path)",
+    },
+    {
         "label": "Nomic-embed-text-v1.5 (sentence-transformers, V100)",
         "prefix": "phase3_nomic_st",
         "params_m": 137,
@@ -90,13 +97,15 @@ def main() -> None:
             q = dict(q)
             q["quality_source"] = "reused from phase3_nomic_st (same underlying Nomic-embed-text-v1.5 model)"
         # Throughput: prefer the Step 2 "Vector Embeddings Generation" total time
+        # (from run_phase3_index resources.json). Fall back to the throughput
+        # script's projected/actual number if we only have that.
         throughput_s = None
-        if v["prefix"] == "phase3_nomic_gpt4all":
-            throughput_s = r.get("projected_full_corpus_encode_s")
-        else:
-            ps = r.get("profile_stats") or {}
-            block = ps.get("[Block] Step 2: Vector Embeddings Generation") or {}
+        ps = r.get("profile_stats") or {}
+        block = ps.get("[Block] Step 2: Vector Embeddings Generation") or {}
+        if block.get("total_time") is not None:
             throughput_s = block.get("total_time")
+        elif r.get("projected_full_corpus_encode_s") is not None:
+            throughput_s = r.get("projected_full_corpus_encode_s")
 
         pt = _load_pytest(v["prefix"])
         # GPT4All reuses Nomic-ST pytest numbers — same weights
@@ -167,7 +176,13 @@ def main() -> None:
 
     # Dual-panel plot: (left) throughput vs retrieval-only; (right) retrieval-only vs end-to-end
     fig, (ax1, ax3) = plt.subplots(1, 2, figsize=(14, 5))
-    labels_short = ["Qwen3-4B\n(A100)*", "Nomic\n(GPT4All,CPU)", "Nomic\n(ST,V100)", "MiniLM\n(ST,V100)"]
+    labels_short = [
+        "Qwen3-4B\n(A100)*",
+        "Nomic\n(GPT4All,CPU)",
+        "Nomic\n(GPT4All,V100)",
+        "Nomic\n(ST,V100)",
+        "MiniLM\n(ST,V100)",
+    ]
     throughputs = [r["ingest_step2_s"] or 0 for r in summary]
     retrieval_sim = [r.get("answer_sim@10") or 0 for r in summary]
     end_to_end_final = [r.get("pytest_final_score") or 0 for r in summary]

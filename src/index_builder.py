@@ -66,6 +66,7 @@ def build_index(
     use_multiprocessing: bool = False,
     use_headings: bool = False,
     embed_backend: str = "llama_cpp",
+    embed_kwargs: Optional[Dict] = None,
     profile_output_dir: Optional[os.PathLike] = None,
 ) -> None:
     """
@@ -173,7 +174,7 @@ def build_index(
 
         # PHASE 2+3: Use CachedEmbedder with pluggable backend
         print(f"Embedding backend: {embed_backend}")
-        embedder = CachedEmbedder(embedding_model_path, backend=embed_backend)
+        embedder = CachedEmbedder(embedding_model_path, backend=embed_backend, **(embed_kwargs or {}))
 
         # PHASE 2 OPTIMIZATION: Dynamic Hardware Routing (only meaningful for llama_cpp)
         has_gpu = detect_gpu()

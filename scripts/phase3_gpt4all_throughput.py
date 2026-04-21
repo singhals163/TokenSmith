@@ -35,6 +35,11 @@ def main() -> None:
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out-dir", default="experiments/phase3")
+    ap.add_argument("--device", default="cpu", choices=["cpu", "gpu"],
+                    help="GPT4All engine device. 'gpu' requires libcublas.so.11 on LD_LIBRARY_PATH.")
+    ap.add_argument("--watchdog-batches", type=int, default=5,
+                    help="If first N batches exceed watchdog-seconds, abort (likely silent CPU fallback on GPU run).")
+    ap.add_argument("--watchdog-seconds", type=float, default=60.0)
     args = ap.parse_args()
 
     with open(args.source_index, "rb") as f:
@@ -52,6 +57,7 @@ def main() -> None:
         model = Embed4All(
             model_name="nomic-embed-text-v1.5.f16.gguf",
             model_path=os.environ["GPT4ALL_MODEL_PATH"],
+            device=args.device,
         )
         load_s = time.perf_counter() - t_load0
         t_enc0 = time.perf_counter()
@@ -61,6 +67,18 @@ def main() -> None:
             b0 = time.perf_counter()
             out = model.embed(batch)
             per_batch_times.append(time.perf_counter() - b0)
+            # Watchdog: GPT4All silently falls back to CPU if the CUDA engine
+            # fails to load. On GPU runs, CPU-rate batches (~30-90s each) are
+            # a clear signal to abort before wasting hours.
+            if args.device == "gpu" and (i // args.batch_size + 1) == args.watchdog_batches:
+                first_n_total = sum(per_batch_times)
+                if first_n_total > args.watchdog_seconds:
+                    raise RuntimeError(
+                        f"Watchdog: first {args.watchdog_batches} batches took "
+                        f"{first_n_total:.1f}s (> {args.watchdog_seconds}s). "
+                        f"Likely silent CPU fallback despite device='gpu'. "
+                        f"Check nvidia-smi and LD_LIBRARY_PATH for libcublas.so.11."
+                    )
         enc_s = time.perf_counter() - t_enc0
 
     per_chunk_s = enc_s / len(sample)
@@ -69,6 +87,7 @@ def main() -> None:
     result = {
         "prefix": args.prefix,
         "embed_backend": "gpt4all",
+        "device": args.device,
         "embedding_model_path": "nomic-embed-text-v1.5.f16.gguf",
         "sample_size": args.sample_size,
         "total_corpus_chunks": total_chunks,

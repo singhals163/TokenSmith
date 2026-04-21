@@ -23,3 +23,13 @@ export LD_PRELOAD="${_CONDA_LIB}/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}"
 # Uncomment the next two lines before doing a CMAKE_CUDA_ARCHITECTURES=70 build.
 # module load cuda/12.6.1 2>/dev/null || true
 # export CUDACXX=$(which nvcc 2>/dev/null)
+
+# GPT4All's bundled libllamamodel-mainline-cuda.so is linked against the CUDA
+# 11 ABI (libcublas.so.11). Appending (not prepending) the cuda/11.8.0 lib dir
+# lets GPT4All find its libs via fallback without displacing the CUDA 12
+# libs that torch and llama-cpp-python use first.
+module load cuda/11.8.0 2>/dev/null || true
+_CUDA11_LIB=/usr/local/pace-apps/spack/packages/linux-rhel9-x86_64_v3/gcc-11.3.1/cuda-11.8.0-oo2ly7zkju4nb26pg7lljpnyscl5fnrs/lib64
+if [ -d "${_CUDA11_LIB}" ]; then
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${_CUDA11_LIB}"
+fi

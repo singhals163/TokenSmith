@@ -51,6 +51,12 @@ VARIANTS = [
         "embed_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embed_backend": "sentence_transformers",
     },
+    {
+        "name": "nomic_gpt4all_gpu",
+        "prefix": "phase3_nomic_gpt4all_gpu",
+        "embed_model": "nomic-embed-text-v1.5.f16.gguf",
+        "embed_backend": "gpt4all",
+    },
 ]
 
 
