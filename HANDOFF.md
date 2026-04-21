@@ -91,11 +91,12 @@ Qwen2.5-1.5B-Instruct generator; `semantic_similarity` weighted 0.7,
 | Variant | semantic | keyword | final_score |
 |---|---|---|---|
 | Qwen3-4B | 0.762 | 0.301 | 0.589 |
-| Nomic (ST, V100) | 0.788 | 0.307 | 0.607 |
+| Nomic (ST, V100) | 0.762 | 0.260 | 0.574 |
 | MiniLM | 0.775 | 0.320 | 0.604 |
 
-**Headline finding:** the lightweight embedders *match or slightly exceed*
-the 4B baseline on end-to-end quality despite a clear retrieval-only gap.
+**Headline finding:** the lightweight embedders land within ~1.5 points
+of the 4B baseline on end-to-end quality (MiniLM slightly edges it) despite
+a clear retrieval-only gap.
 The cross-encoder reranker does real rescue work as long as the right chunk
 is in the FAISS top-50 candidate pool. So on this corpus a lightweight
 embedder is a drop-in replacement when the rest of the pipeline is intact.
