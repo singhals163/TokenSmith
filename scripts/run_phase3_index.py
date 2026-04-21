@@ -29,20 +29,17 @@ VARIANTS = {
         "backend": "llama_cpp",
         "prefix": "phase3_qwen4b",
     },
+    "qwen4b_pypdfium": {
+        # Phase-1-v2 comparison: same Qwen4B embedder, new fast-path markdown.
+        "model_path": "models/Qwen3-Embedding-4B-Q4_K_M.gguf",
+        "backend": "llama_cpp",
+        "prefix": "phase1v2_pypdfium_qwen4b",
+    },
     "nomic_gpt4all": {
         # gpt4all will download this GGUF on first use into $GPT4ALL_MODEL_PATH
         "model_path": "nomic-embed-text-v1.5.f16.gguf",
         "backend": "gpt4all",
         "prefix": "phase3_nomic_gpt4all",
-        "device": "cpu",
-    },
-    "nomic_gpt4all_gpu": {
-        # Same GPT4All engine + Nomic weights as `nomic_gpt4all`, but with the
-        # CUDA engine loaded (needs libcublas.so.11 on LD_LIBRARY_PATH).
-        "model_path": "nomic-embed-text-v1.5.f16.gguf",
-        "backend": "gpt4all",
-        "prefix": "phase3_nomic_gpt4all_gpu",
-        "device": "gpu",
     },
     "nomic_st": {
         "model_path": "nomic-ai/nomic-embed-text-v1.5",
@@ -86,10 +83,6 @@ def main() -> None:
     print(f"Markdown        : {md_path}")
     print("=" * 70)
 
-    embed_kwargs = {}
-    if variant["backend"] == "gpt4all":
-        embed_kwargs["device"] = variant.get("device", "cpu")
-
     build_index(
         markdown_file=str(md_path),
         chunker=chunker,
@@ -100,7 +93,6 @@ def main() -> None:
         use_multiprocessing=False,
         use_headings=False,
         embed_backend=variant["backend"],
-        embed_kwargs=embed_kwargs,
         profile_output_dir=args.profile_dir,
     )
 

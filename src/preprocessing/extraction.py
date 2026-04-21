@@ -223,6 +223,75 @@ def process_pdf_chunk(chunk_info: dict) -> dict:
     }
 
 
+# -------------------------------------------------------------------------
+# Fast-path extractor (Phase-1-v2)
+# Swaps docling for pypdfium2 on the text-extraction hot path; detects
+# numbered section headings with a regex so the downstream section-splitter
+# (`## N.N.N …`) still works.
+# -------------------------------------------------------------------------
+
+# Section heading: "1.2 Database-System Applications" / "17.3.2 Storage Structure"
+# Must start the line, be followed by a capitalized title, and not end in
+# sentence punctuation (avoids matching cross-reference lines like "see 1.2").
+_HEADING_RE = re.compile(
+    r"^(\d+(?:\.\d+)+)\s+([A-Z][^\n]{2,80}?)[ \t]*$",
+    re.MULTILINE,
+)
+# TOC lines: "1.2 Database-System Applications 12" — title followed by page
+# number. We strip these so they don't trigger a spurious `## 1.2 …` heading
+# in the markdown.
+_TOC_RE = re.compile(r"^\d+(?:\.\d+)+\s+[^\n]+?\s+\d+\s*$", re.MULTILINE)
+
+
+def _postprocess_page_pypdfium(text: str) -> str:
+    """Turn raw pypdfium2 text into chunker-compatible markdown.
+
+    - Drop the leading "Page N" line pypdfium2 emits (we add our own footer).
+    - Drop TOC-style "N.N Title PAGE" lines so they don't become fake headings.
+    - Promote numbered section starts ("1.2 Database-System Applications") to
+      "## 1.2 Database-System Applications" so extract_sections_from_markdown
+      can split on them.
+    """
+    text = re.sub(r"^\s*Page\s+\d+\s*\n", "", text, count=1)
+    text = _TOC_RE.sub("", text)
+    text = _HEADING_RE.sub(lambda m: f"## {m.group(1)} {m.group(2)}", text)
+    return text
+
+
+@timeit(name="Phase 1-v2 Execute: pypdfium2 Worker")
+def process_pdf_range_pypdfium(args: tuple) -> dict:
+    """Worker function: read a page range directly from the master PDF with
+    pypdfium2 and return markdown for that range.
+
+    Unlike `process_pdf_chunk`, this does NOT require a pre-split temp PDF —
+    workers seek to their page range in the original file, removing the
+    map-phase (split_pdf) Amdahl tail. Roughly 80x faster per page than the
+    docling path on plain-text textbooks."""
+    import pypdfium2 as pdfium  # import inside the worker so the child
+                                # process pays the load cost once, not via pickle
+    master_path, start_page, end_page = args
+    pdf = pdfium.PdfDocument(master_path)
+    parts: List[str] = []
+    for i in range(start_page, end_page):
+        raw = pdf[i].get_textpage().get_text_range()
+        md = _postprocess_page_pypdfium(raw)
+        parts.append(md)
+        parts.append(f"\n\n--- Page {i + 1} ---\n\n")
+    pdf.close()
+    return {"offset": start_page, "markdown": "".join(parts)}
+
+
+def plan_page_ranges(master_path: str, pages_per_chunk: int) -> List[tuple]:
+    """Cheap alternative to `split_pdf`: just compute (start, end) page
+    ranges against the master PDF. No disk I/O, no temp files."""
+    reader = PdfReader(master_path)
+    total = len(reader.pages)
+    ranges = []
+    for start in range(0, total, pages_per_chunk):
+        ranges.append((master_path, start, min(start + pages_per_chunk, total)))
+    return ranges
+
+
 import argparse # Add this at the top of extraction.py with the other imports
 
 def main():
@@ -231,6 +300,9 @@ def main():
     parser.add_argument("--chunk_size", type=int, default=50, help="Number of pages per chunk")
     parser.add_argument("--out_dir", type=str, default="data/extracted", help="Directory to store outputs")
     parser.add_argument("--profile_out", type=str, default="profiling.txt", help="File to save profile stats")
+    parser.add_argument("--parser", type=str, default="docling", choices=["docling", "pypdfium"],
+                        help="Text-extraction backend: `docling` (default, slow but layout-aware) or "
+                             "`pypdfium` (Phase-1-v2 fast path, ~80x faster).")
     args = parser.parse_args()
 
     project_root = Path(__file__).resolve().parent.parent.parent
@@ -258,29 +330,47 @@ def main():
             print(f"Output Directory: {out_dir}")
             print(f"{'='*60}")
 
-            chunks = split_pdf(str(pdf_path), chunk_size=args.chunk_size)
-            
-            results = []
-            with ProcessPoolExecutor(max_workers=args.workers) as executor:
-                for result in executor.map(process_pdf_chunk, chunks):
-                    results.append(result)
-                    
-            print("\n[Reduce Phase] Merging worker outputs and writing to disk...")
-            results.sort(key=lambda x: x["offset"])
-            full_document_markdown = "".join([res["markdown"] for res in results])
-            
-            try:
-                with open(output_md, "w", encoding="utf-8") as f:
-                    f.write(full_document_markdown)
-                markdown_files.append(output_md)
-            except Exception as e:
-                print(f"Error writing to file {output_md}: {e}", file=sys.stderr)
-            
-            for chunk in chunks:
+            if args.parser == "pypdfium":
+                # Fast path: skip the pypdf split entirely — workers read page
+                # ranges directly from the master PDF via pypdfium2.
+                page_ranges = plan_page_ranges(str(pdf_path), pages_per_chunk=args.chunk_size)
+                print(f"[Phase-1-v2 Map] Planned {len(page_ranges)} page ranges (no split, no temp files).")
+                results = []
+                with ProcessPoolExecutor(max_workers=args.workers) as executor:
+                    for result in executor.map(process_pdf_range_pypdfium, page_ranges):
+                        results.append(result)
+                results.sort(key=lambda x: x["offset"])
+                full_document_markdown = "".join([res["markdown"] for res in results])
                 try:
-                    os.remove(chunk["path"])
-                except OSError:
-                    pass
+                    with open(output_md, "w", encoding="utf-8") as f:
+                        f.write(full_document_markdown)
+                    markdown_files.append(output_md)
+                except Exception as e:
+                    print(f"Error writing to file {output_md}: {e}", file=sys.stderr)
+            else:
+                chunks = split_pdf(str(pdf_path), chunk_size=args.chunk_size)
+
+                results = []
+                with ProcessPoolExecutor(max_workers=args.workers) as executor:
+                    for result in executor.map(process_pdf_chunk, chunks):
+                        results.append(result)
+
+                print("\n[Reduce Phase] Merging worker outputs and writing to disk...")
+                results.sort(key=lambda x: x["offset"])
+                full_document_markdown = "".join([res["markdown"] for res in results])
+
+                try:
+                    with open(output_md, "w", encoding="utf-8") as f:
+                        f.write(full_document_markdown)
+                    markdown_files.append(output_md)
+                except Exception as e:
+                    print(f"Error writing to file {output_md}: {e}", file=sys.stderr)
+
+                for chunk in chunks:
+                    try:
+                        os.remove(chunk["path"])
+                    except OSError:
+                        pass
 
     if markdown_files:
         print("\nStarting Section Extraction...")

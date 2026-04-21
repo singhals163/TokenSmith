@@ -52,10 +52,13 @@ VARIANTS = [
         "embed_backend": "sentence_transformers",
     },
     {
-        "name": "nomic_gpt4all_gpu",
-        "prefix": "phase3_nomic_gpt4all_gpu",
-        "embed_model": "nomic-embed-text-v1.5.f16.gguf",
-        "embed_backend": "gpt4all",
+        # Phase-1-v2: same Qwen4B embedder, but against the pypdfium-extracted
+        # markdown instead of docling. Measures accuracy cost of the ~156x
+        # faster extraction path.
+        "name": "qwen4b_pypdfium",
+        "prefix": "phase1v2_pypdfium_qwen4b",
+        "embed_model": "models/Qwen3-Embedding-4B-Q4_K_M.gguf",
+        "embed_backend": "llama_cpp",
     },
 ]
 
