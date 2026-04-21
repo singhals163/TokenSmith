@@ -88,15 +88,20 @@ libcublas.so.11 and we are on CUDA 12. Projected from a 100-chunk sample.
 Qwen2.5-1.5B-Instruct generator; `semantic_similarity` weighted 0.7,
 `keyword_similarity` 0.3):
 
-| Variant | semantic | keyword | final_score |
-|---|---|---|---|
-| Qwen3-4B | 0.762 | 0.301 | 0.589 |
-| Nomic (ST, V100) | 0.762 | 0.260 | 0.574 |
-| MiniLM | 0.775 | 0.320 | 0.604 |
+| Variant | semantic | keyword | bleu | final_score | wall (s) |
+|---|---|---|---|---|---|
+| Qwen3-4B | 0.761 | 0.310 | 0.026 | 0.592 | 44 |
+| Nomic (ST, V100) | 0.735 | 0.346 | 0.032 | 0.589 | 36 |
+| MiniLM | 0.778 | 0.310 | 0.026 | 0.603 | 39 |
 
-**Headline finding:** the lightweight embedders land within ~1.5 points
-of the 4B baseline on end-to-end quality (MiniLM slightly edges it) despite
-a clear retrieval-only gap.
+(All four variants running generator on GPU — the earlier 413/722/688-sec
+numbers were a bug where `tests/metrics/semantic.py` unconditionally set
+`CUDA_VISIBLE_DEVICES=''` on import, killing the GPU for llama.cpp too.
+Fixed now; the scorer is pinned to `device='cpu'` explicitly.)
+
+**Headline finding:** the lightweight embedders match the 4B baseline
+on end-to-end quality (MiniLM slightly edges it, Nomic slightly below)
+despite a clear retrieval-only gap.
 The cross-encoder reranker does real rescue work as long as the right chunk
 is in the FAISS top-50 candidate pool. So on this corpus a lightweight
 embedder is a drop-in replacement when the rest of the pipeline is intact.

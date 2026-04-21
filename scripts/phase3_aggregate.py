@@ -123,6 +123,7 @@ def main() -> None:
             "mean_emb_ms": q.get("mean_emb_ms"),
             "pytest_semantic_similarity": pt.get("mean_semantic_similarity"),
             "pytest_keyword_similarity": pt.get("mean_keyword_similarity"),
+            "pytest_bleu": pt.get("mean_bleu"),
             "pytest_final_score": pt.get("mean_final_score"),
             "pytest_n": pt.get("n_benchmarks"),
             "pytest_wall_s": pt.get("wall_time_s"),
@@ -150,15 +151,16 @@ def main() -> None:
             e=f"{r['mean_emb_ms']:.1f}" if r.get("mean_emb_ms") is not None else "—",
         ))
 
-    print("\n### Generation (Qwen2.5-1.5B, CPU) — full pytest pipeline with cross-encoder rerank\n")
-    print("| Variant | n | semantic_similarity | keyword_similarity | final_score | wall (s) |")
-    print("|---|---|---|---|---|---|")
+    print("\n### Generation (Qwen2.5-1.5B on GPU) — full pytest pipeline with cross-encoder rerank\n")
+    print("| Variant | n | semantic_similarity | keyword_similarity | bleu | final_score | wall (s) |")
+    print("|---|---|---|---|---|---|---|")
     for r in summary:
-        print("| {label} | {n} | {s} | {k} | {f} | {w} |".format(
+        print("| {label} | {n} | {s} | {k} | {b} | {f} | {w} |".format(
             label=r["label"],
             n=r.get("pytest_n") or "—",
             s=f"{r['pytest_semantic_similarity']:.3f}" if r.get("pytest_semantic_similarity") is not None else "—",
             k=f"{r['pytest_keyword_similarity']:.3f}" if r.get("pytest_keyword_similarity") is not None else "—",
+            b=f"{r['pytest_bleu']:.3f}" if r.get("pytest_bleu") is not None else "—",
             f=f"{r['pytest_final_score']:.3f}" if r.get("pytest_final_score") is not None else "—",
             w=f"{r['pytest_wall_s']:.0f}" if r.get("pytest_wall_s") is not None else "—",
         ))
