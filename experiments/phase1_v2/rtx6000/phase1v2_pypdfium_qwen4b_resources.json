@@ -1,0 +1,73 @@
+{
+  "index_prefix": "phase1v2_pypdfium_qwen4b",
+  "embed_backend": "llama_cpp",
+  "embedding_model_path": "models/Qwen3-Embedding-4B-Q4_K_M.gguf",
+  "num_chunks": 3468,
+  "embedding_dim": 2560,
+  "resources": {
+    "peak_rss_mib": 3150.7,
+    "peak_vram_mib": 3436.0,
+    "start_vram_mib": 1.0,
+    "delta_vram_mib": 3435.0,
+    "samples": 16,
+    "gpu_available": true
+  },
+  "profile_stats": {
+    "Extraction: preprocess_extracted_section": {
+      "count": 1364,
+      "total_time": 0.15869498252868652
+    },
+    "Extraction: extract_sections_from_markdown": {
+      "count": 1,
+      "total_time": 0.27202463150024414
+    },
+    "[Block] Extract Sections from Markdown": {
+      "count": 1,
+      "total_time": 0.2720317840576172
+    },
+    "Chunking: SectionRecursiveStrategy.chunk": {
+      "count": 1365,
+      "total_time": 8.749820470809937
+    },
+    "Chunking: DocumentChunker.chunk": {
+      "count": 1365,
+      "total_time": 8.751595735549927
+    },
+    "[Block] Step 1: Chunking & Metadata Parsing": {
+      "count": 1,
+      "total_time": 8.830756902694702
+    },
+    "Embedder [Main]: Load Model to Memory": {
+      "count": 1,
+      "total_time": 1.6564087867736816
+    },
+    "Cache: Read SQLite": {
+      "count": 3468,
+      "total_time": 6.399491548538208
+    },
+    "CachedEmbedder: Check Cache": {
+      "count": 1,
+      "total_time": 6.412473201751709
+    },
+    "[Block] Step 2: Vector Embeddings Generation": {
+      "count": 1,
+      "total_time": 8.309526443481445
+    },
+    "[Block] Step 3: Build FAISS Index": {
+      "count": 1,
+      "total_time": 0.1865394115447998
+    },
+    "Helper: preprocess_for_bm25": {
+      "count": 3468,
+      "total_time": 0.5611445903778076
+    },
+    "[Block] Step 4: Build BM25 Index": {
+      "count": 1,
+      "total_time": 0.9398252964019775
+    },
+    "[Block] Step 5: Dump Index Artifacts": {
+      "count": 1,
+      "total_time": 2.3259479999542236
+    }
+  }
+}

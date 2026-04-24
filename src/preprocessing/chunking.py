@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+# langchain_text_splitters pulls transformers (~100+ MB of cold Lustre reads)
+# in via its tokenizer plumbing — skip the import until the splitter is
+# actually used.
 
 # --- NEW: Import profiler tools ---
 from src.profiler import timeit
@@ -60,6 +62,7 @@ class SectionRecursiveStrategy(ChunkStrategy):
 
     @timeit("Chunking: SectionRecursiveStrategy.chunk")
     def chunk(self, text: str) -> List[str]:
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.recursive_chunk_size,
             chunk_overlap=self.recursive_overlap,
