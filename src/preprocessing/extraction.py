@@ -8,11 +8,19 @@ from typing import List, Dict
 from concurrent.futures import ProcessPoolExecutor
 
 from pypdf import PdfReader, PdfWriter
-from docling.datamodel.pipeline_options import PdfPipelineOptions
-from docling.document_converter import DocumentConverter, PdfFormatOption, InputFormat
-from docling.backend.docling_parse_v2_backend import DoclingParseV2DocumentBackend
 
 from src.profiler import timeit, TimerBlock, print_profile_stats
+
+
+def _import_docling():
+    """Lazy import for docling — it's 100+ MB of shared libs and initializes
+    tokenizers that cold-page-in from Lustre for minutes. Only the docling
+    parser path needs it; the pypdfium2 fast path and every downstream
+    consumer of this module (index_builder, etc.) should not pay that cost."""
+    from docling.datamodel.pipeline_options import PdfPipelineOptions
+    from docling.document_converter import DocumentConverter, PdfFormatOption, InputFormat
+    from docling.backend.docling_parse_v2_backend import DoclingParseV2DocumentBackend
+    return PdfPipelineOptions, DocumentConverter, PdfFormatOption, InputFormat, DoclingParseV2DocumentBackend
 
 
 @timeit(name="Extraction: extract_sections_from_markdown")
@@ -175,11 +183,13 @@ def split_pdf(file_path: str, chunk_size: int = 50) -> List[dict]:
 @timeit(name="Phase 2 Execute: Docling Worker")
 def process_pdf_chunk(chunk_info: dict) -> dict:
     """Worker function to process a single PDF chunk with verbose logging."""
+    (PdfPipelineOptions, DocumentConverter, PdfFormatOption, InputFormat,
+     DoclingParseV2DocumentBackend) = _import_docling()
     input_file_path = chunk_info["path"]
     offset = chunk_info["start_page_offset"]
     end_page = chunk_info["end_page"]
     log_prefix = f"[Pages {offset}-{end_page}]"
-    
+
     pipeline_options = PdfPipelineOptions()
     pipeline_options.do_ocr = False
     pipeline_options.do_table_structure = False
