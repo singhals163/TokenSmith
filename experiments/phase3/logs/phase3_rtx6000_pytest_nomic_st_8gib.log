@@ -1,0 +1,11 @@
+[nomic_st] launching: /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/bin/python -m pytest tests/test_benchmarks.py --config=/storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/phase3_nomic_st_pytest_config.yaml --index-prefix=phase3_nomic_st --model-path=models/qwen2.5-1.5b-instruct-q5_k_m.gguf --embed-model=nomic-ai/nomic-embed-text-v1.5 --output-mode=terminal --artifacts_dir=index/sections -s -q
+[nomic_st] pytest exit=0 wall=36.2s log=/storage/scratch1/1/ssinghal88/TokenSmith/logs/phase3_pytest_nomic_st.log
+
+================================================================================================
+variant      backend                  n  sem_sim   kw_sim    final   wall_s
+------------------------------------------------------------------------------------------------
+nomic_st     sentence_transformers   11    0.738    0.270    0.563     36.2
+================================================================================================
+Wrote /storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/pytest_all_summary.json
+35.07user 7.47system 0:41.08elapsed 103%CPU (0avgtext+0avgdata 4384936maxresident)k
+0inputs+648outputs (9major+1761372minor)pagefaults 0swaps

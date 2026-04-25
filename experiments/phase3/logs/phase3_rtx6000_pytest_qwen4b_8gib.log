@@ -1,0 +1,11 @@
+[qwen4b] launching: /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/bin/python -m pytest tests/test_benchmarks.py --config=/storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/phase3_qwen4b_pytest_config.yaml --index-prefix=phase3_qwen4b --model-path=models/qwen2.5-1.5b-instruct-q5_k_m.gguf --embed-model=models/Qwen3-Embedding-4B-Q4_K_M.gguf --output-mode=terminal --artifacts_dir=index/sections -s -q
+[qwen4b] pytest exit=0 wall=37.1s log=/storage/scratch1/1/ssinghal88/TokenSmith/logs/phase3_pytest_qwen4b.log
+
+================================================================================================
+variant      backend                  n  sem_sim   kw_sim    final   wall_s
+------------------------------------------------------------------------------------------------
+qwen4b       llama_cpp               11    0.757    0.317    0.592     37.1
+================================================================================================
+Wrote /storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/pytest_all_summary.json
+34.96user 7.28system 0:38.09elapsed 110%CPU (0avgtext+0avgdata 5102416maxresident)k
+1960inputs+808outputs (11major+2178769minor)pagefaults 0swaps

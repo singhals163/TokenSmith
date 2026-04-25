@@ -1,0 +1,11 @@
+[minilm] launching: /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/bin/python -m pytest tests/test_benchmarks.py --config=/storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/phase3_minilm_pytest_config.yaml --index-prefix=phase3_minilm --model-path=models/qwen2.5-1.5b-instruct-q5_k_m.gguf --embed-model=sentence-transformers/all-MiniLM-L6-v2 --output-mode=terminal --artifacts_dir=index/sections -s -q
+[minilm] pytest exit=0 wall=40.3s log=/storage/scratch1/1/ssinghal88/TokenSmith/logs/phase3_pytest_minilm.log
+
+================================================================================================
+variant      backend                  n  sem_sim   kw_sim    final   wall_s
+------------------------------------------------------------------------------------------------
+minilm       sentence_transformers   11    0.761    0.272    0.577     40.3
+================================================================================================
+Wrote /storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/pytest_all_summary.json
+37.69user 7.26system 0:41.13elapsed 109%CPU (0avgtext+0avgdata 4112608maxresident)k
+0inputs+1048outputs (11major+1572095minor)pagefaults 0swaps
