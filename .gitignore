@@ -78,8 +78,8 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Program logs
-logs/
+# Program logs (top-level only — experiments/**/logs/ is allowed)
+/logs/
 
 # Unit test / coverage reports
 htmlcov/
@@ -102,6 +102,8 @@ cover/
 
 # Django stuff:
 *.log
+!experiments/**/*.log
+!experiments/**/*.csv
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -252,3 +254,8 @@ marimo/_lsp/
 __marimo__/
 
 tests/results
+
+# Allow log files when they live under experiments/
+!experiments/**/*.log
+!experiments/**/*.csv
+!experiments/**/*.txt
