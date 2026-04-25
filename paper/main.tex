@@ -1,0 +1,417 @@
+%%% TokenSmith optimization report
+%%% ACM SIG Proceedings template (acmart, sigconf option)
+%%% Switch to "manuscript, screen, review" for double-spaced submission.
+
+\documentclass[sigconf]{acmart}
+
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+%% Disable ACM rights statement / copyright footer for student-project use.
+\setcopyright{none}
+\acmConference[CS 6423]{CS 6423 Course Project}{Spring 2026}{Georgia Tech}
+\acmDOI{}
+\acmISBN{}
+\settopmatter{printacmref=false, printccs=false, printfolios=true}
+
+\begin{document}
+
+\title{Optimizing TokenSmith for Consumer-GPU Hardware}
+\subtitle{A Phase-by-Phase Latency Study of a Local-First Textbook RAG System}
+
+\author{Shivam Singhal}
+\email{shivamsinghal16032003@gmail.com}
+\affiliation{%
+  \institution{Georgia Institute of Technology}
+  \city{Atlanta}
+  \state{GA}
+  \country{USA}
+}
+
+\renewcommand{\shortauthors}{Singhal}
+
+\begin{abstract}
+TokenSmith is a local-first retrieval-augmented generation (RAG) system
+for textbook question answering. It is designed to run on a student's
+own machine, with no external API calls. The original implementation
+targets server-class GPUs; we re-target it for consumer-class hardware
+with at most 8\,GiB of GPU memory and four CPU cores.
+
+We make four pipeline changes. Phase 1 parallelizes PDF extraction
+across CPU workers using a process pool, reaching a 25.4$\times$
+speedup on a 64-core host and a 3.9$\times$ speedup on four cores.
+Phase 1.5 adds a \texttt{pypdfium2} fast extraction path that runs
+roughly 57$\times$ faster than \texttt{docling} on plain-text textbooks
+without losing section structure. Phase 2 routes embedding work between
+a GPU sequential path and a CPU process pool based on hardware
+detection, and sorts batches by length to cut padding waste in
+\texttt{llama.cpp}. Phase 3 refactors the embedder around a pluggable
+backend so the indexer can target \texttt{llama.cpp} GGUF, GPT4All
+(including a Vulkan path that needs no CUDA), or HuggingFace
+\texttt{sentence-transformers} without changing call sites.
+
+On a Quadro RTX 6000 with peak VRAM capped at 8\,GiB, every embedder
+variant stays well below the cap; the largest peak is 5.4\,GiB for the
+4\,B baseline. A 23\,M MiniLM variant matches the 4\,B baseline on
+end-to-end answer quality (final score 0.578 vs.\ 0.592) while running
+13$\times$ faster end to end (40\,s vs.\ 558\,s warm wall).
+\end{abstract}
+
+\keywords{retrieval-augmented generation, local inference, embeddings,
+GGUF, consumer GPU, parallel PDF extraction, FAISS}
+
+\maketitle
+
+%% ------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+
+Most RAG systems for textbook Q\&A assume a server with a large GPU
+and sustained internet access \cite{lewis2020rag, gao2023rag-survey}.
+Students typically do not have either. TokenSmith is a local-first RAG
+system that targets a student's own machine: PDFs in, answers out, no
+data leaves the host.
+
+Our optimization target in this work is a single laptop-class profile:
+one GPU with at most 8\,GiB of memory, four CPU cores, and 32\,GiB of
+host RAM. We use the Silberschatz \emph{Database System Concepts}
+textbook as the canonical corpus (2{,}195 pages, 2{,}664 chunks after
+section-aware splitting). The end-to-end latency target is conservative:
+make the answer come back fast enough that a student does not give up
+on it during a study session.
+
+The system has four pipeline stages: PDF extraction to markdown, chunk
+indexing into FAISS \cite{johnson2019faiss} and BM25
+\cite{robertson2009bm25}, retrieval with a cross-encoder reranker, and
+generation through a 1.5\,B \texttt{Qwen2.5-Instruct} GGUF model
+\cite{qwen2024} running on \texttt{llama.cpp} \cite{llamacpp}. We make
+four changes, one per pipeline stage, and measure the impact on a
+production server (A100 / V100) and on a Quadro RTX 6000
+(Turing, sm\_75) used as a consumer-GPU proxy. Sections~\ref{sec:phase1}
+through \ref{sec:phase3} describe each change. Section~\ref{sec:eval}
+reports the consumer-GPU evaluation.
+
+%% ------------------------------------------------------------------
+\section{System Overview}
+\label{sec:system}
+
+The original TokenSmith pipeline runs strictly sequentially.
+\texttt{docling} \cite{docling} converts the PDF to markdown one page at
+a time, the markdown is chunked on numbered section headings, every
+chunk is embedded by a 4\,B \texttt{Qwen3-Embedding} model loaded
+through \texttt{llama.cpp}, and the embeddings populate a flat FAISS
+index alongside a BM25 sketch. At query time the top-50 candidates are
+re-scored by a MiniLM cross-encoder, the top five are passed to the
+generator, and a small metric suite (semantic similarity, keyword
+overlap, BLEU) compares the answer to a hand-written reference.
+
+The default scoring weights are 0.5 for semantic similarity, 0.3 for
+keyword overlap, and 0.2 for BLEU. We refer to the resulting weighted
+mean as the \emph{final score}. All numbers in this paper are means
+over an 11-question benchmark suite.
+
+\textbf{Hardware referenced in this paper.} The A100 / V100 server
+hosts have 64 CPU cores and 80 / 16\,GiB of GPU memory. The RTX 6000
+node is a PACE Phoenix allocation with 1$\times$Quadro RTX 6000 (sm\_75,
+24\,GiB), four CPU cores, and 32\,GiB of host RAM.
+
+%% ------------------------------------------------------------------
+\section{Phase 1: Parallel PDF Extraction}
+\label{sec:phase1}
+
+The original extractor calls \texttt{docling} on the entire PDF in one
+pass. Layout analysis is the slowest stage of \texttt{docling}, and it
+is independent across pages, so we make it parallel.
+
+\subsection{Implementation}
+
+\texttt{split\_pdf} divides the master PDF into fixed-size page-range
+chunks and writes each chunk to a temporary file using
+\texttt{pypdf} \cite{pypdf}. \texttt{process\_pdf\_chunk} is the
+worker: it imports \texttt{docling}, converts one chunk, and serializes
+it page by page. A \texttt{ProcessPoolExecutor} runs the workers,
+results come back keyed by their starting page offset, and the reduce
+phase concatenates them in order. The \texttt{docling} import is
+deferred into the worker function so that downstream callers of this
+module (the indexer, the pytest harness) do not pay a 100\,MB
+shared-library cold-load cost when they only need the markdown
+section helpers.
+
+\subsection{Measured Impact}
+
+Table~\ref{tab:phase1-scaling} shows the wall-time scaling. Speedup
+saturates near 32 workers on the server host because the
+\texttt{pypdf} split phase becomes the Amdahl tail. On a 4-core RTX
+6000 host the speedup is bounded by core count and reaches 3.9$\times$
+relative to a fresh 4-core sequential run, matching the 4-core
+checkpoint baseline reported earlier in the project.
+
+\begin{table}[t]
+\caption{Phase 1: docling extraction wall time on the 2{,}195-page
+Silberschatz textbook.}
+\label{tab:phase1-scaling}
+\begin{tabular}{lrrr}
+\toprule
+host (cores) & workers & wall (s) & speedup \\
+\midrule
+server (64) & 1  & $\sim$1{,}930 & 1.0$\times$ \\
+server (64) & 32 & $\sim$76      & \textbf{25.4$\times$} \\
+RTX 6000 (4) & 4 & 499           & 3.9$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ------------------------------------------------------------------
+\section{Phase 1.5: pypdfium2 Fast Path}
+\label{sec:phase15}
+
+Even fully parallel, \texttt{docling} is overkill for plain-text
+textbooks. Layout analysis costs minutes per pass and the textbook does
+not need it. Phase 1.5 adds a second extraction backend that runs
+without layout analysis.
+
+\subsection{Implementation}
+
+The new module \texttt{src/preprocessing/pypdfium\_extractor.py} uses
+\texttt{pypdfium2} \cite{pypdfium2} to read raw text from each page
+range. Workers seek into the master PDF directly; there is no temporary
+split and no map-phase write to disk. A short post-processor strips
+table-of-contents lines and promotes lines that look like
+``\texttt{N.N Title}'' to ``\texttt{\#\# N.N Title}'' so the existing
+markdown section splitter still works. We keep the \texttt{docling}
+backend available for documents that need real layout analysis.
+
+\subsection{Measured Impact}
+
+On the RTX 6000 host, full extraction of the 2{,}195-page textbook on
+four workers drops from 499\,s with \texttt{docling} to 8.66\,s with
+\texttt{pypdfium2}, a $57\times$ improvement. End-to-end final score on
+the regenerated index is 0.606, slightly above the 0.592 reported by
+the \texttt{docling} pipeline at the same configuration; section
+boundaries are recovered well enough that retrieval quality does not
+degrade.
+
+%% ------------------------------------------------------------------
+\section{Phase 2: Hardware Router and Batch Sorting}
+\label{sec:phase2}
+
+Two small changes inside the embedder reduce ingestion wall time on
+both server and consumer hardware.
+
+\subsection{Length-Sorted Batches}
+
+\texttt{llama.cpp} pads each embedding batch to the longest text in
+that batch. Random ordering wastes compute on short texts that happen
+to share a batch with one long text. Before batching we sort the
+inputs by length descending; after encoding we permute the result back
+to caller order so the FAISS index ID sequence is unchanged. This is a
+ten-line change in \texttt{SentenceTransformer.encode()} and removes
+the worst case of mixed-length batching.
+
+\subsection{Dynamic GPU / CPU Routing}
+
+\texttt{detect\_gpu()} checks for \texttt{nvidia-smi} (CUDA) or for
+Apple Silicon (Metal). When a GPU is reachable the indexer takes a
+sequential path with \texttt{batch\_size=32} so the GPU's single
+allocator is not contended. When no GPU is reachable the indexer falls
+back to a CPU \texttt{multiprocessing.Pool} and lets workers share the
+\texttt{mmap}'d GGUF weights. This avoids the worst case where a CPU
+worker pool fights the GPU's allocator on a partial-GPU host.
+
+\subsection{Measured Impact}
+
+\begin{table}[t]
+\caption{Phase 2: Step 2 (embedding) wall time on 2{,}664 chunks. The
+8\,GiB cap is the laptop simulation; \texttt{llama.cpp} is not bound by
+torch's allocator and the cap was not binding at any point.}
+\label{tab:phase2}
+\begin{tabular}{lrr}
+\toprule
+host & wall (s) & peak VRAM \\
+\midrule
+A100 (64-core, 80\,GiB)            & 305 & not recorded \\
+V100 (64-core, 16\,GiB)            & 426 & 4.3\,GiB \\
+RTX 6000 (4-core), uncapped, warm  & \textbf{33.7} & 3.4\,GiB \\
+RTX 6000, \texttt{VRAM\_CAP\_GIB=8} & 33.7 & 3.4\,GiB \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:phase2} shows the warm wall-time on each platform. The
+RTX 6000 number is the second run in the same shell; the cold start
+adds roughly 17\,s for paging in the GGUF weights from Lustre. Peak
+VRAM stays at 3.4\,GiB regardless of the cap setting, because
+\texttt{llama.cpp} is not bound by torch's per-process memory fraction.
+
+%% ------------------------------------------------------------------
+\section{Phase 3: Pluggable Embedding Backends}
+\label{sec:phase3}
+
+A 4\,B embedder is heavy. Phase 3 makes the embedder swappable so we
+can compare lighter alternatives at a fixed call site.
+
+\subsection{Backend Abstraction}
+
+\texttt{src/embedder.py} introduces a \texttt{BaseEmbedder} ABC with
+three concrete implementations: \texttt{LlamaCppEmbedder} for GGUF
+models loaded through \texttt{llama.cpp}, \texttt{GPT4AllEmbedder} for
+Nomic GGUF models loaded through \texttt{gpt4all} \cite{gpt4all} (with
+optional \texttt{device=kompute} for Vulkan and \texttt{device=cuda} for
+NVIDIA), and \texttt{HFSentenceTransformerEmbedder} for HuggingFace
+\texttt{sentence-transformers} \cite{reimers2019sbert}. A factory
+\texttt{make\_embedder(model\_path, backend)} returns the right
+implementation. A back-compat alias keeps existing import sites working
+without change.
+
+\subsection{Adjacent Fixes}
+
+Phase 3 also adds a sentence-level BLEU-4 metric \cite{papineni2002bleu}
+under \texttt{tests/metrics/bleu.py} with NIST method-1 smoothing. We
+also fix a pollution bug in \texttt{tests/metrics/semantic.py}: the
+original code set \texttt{CUDA\_VISIBLE\_DEVICES=''} at module import,
+which silently disabled the GPU for any other process in the same
+interpreter. We replace that with \texttt{device='cpu'} on the scoring
+model, which restores GPU access for the generator. End-to-end pytest
+wall on a typical V100 run drops from $\sim$700\,s to $\sim$45\,s.
+
+\subsection{Quality Comparison on V100}
+
+\begin{table}[t]
+\caption{Phase 3, V100, 11-question benchmark suite. Final score is
+the weighted mean of semantic, keyword, and BLEU.}
+\label{tab:phase3-v100}
+\begin{tabular}{lrrrrr}
+\toprule
+variant & params & sem & kw & BLEU & final \\
+\midrule
+qwen4b           & 4\,B   & 0.761 & 0.310 & 0.026 & 0.592 \\
+nomic\_st        & 137\,M & 0.735 & 0.346 & 0.032 & 0.589 \\
+\textbf{minilm}  & 23\,M  & 0.778 & 0.310 & 0.026 & \textbf{0.603} \\
+nomic\_gpt4all   & 137\,M & 0.716 & 0.295 & 0.026 & 0.558 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:phase3-v100} reports the four variants. The 23\,M MiniLM
+variant slightly beats the 4\,B baseline on final score even though its
+retrieval-only quality is clearly weaker. The cross-encoder reranker
+recovers most of the gap, as long as the right chunk is somewhere in
+the top-50 FAISS neighbours; with a small textbook corpus this
+condition holds for most queries.
+
+%% ------------------------------------------------------------------
+\section{Consumer-GPU Evaluation}
+\label{sec:eval}
+
+The headline question is whether the system runs end to end on a
+consumer GPU at 8\,GiB. We answer it on the RTX 6000 with a hard cap.
+
+\subsection{Method}
+
+\texttt{tools/cap\_vram.py} calls
+\texttt{torch.cuda.set\_per\_process\_memory\_fraction} based on the
+\texttt{VRAM\_CAP\_GIB} environment variable. We set
+\texttt{VRAM\_CAP\_GIB=8} for the laptop simulation. \texttt{llama.cpp}
+is not bound by the torch allocator, so for the GGUF-backed variant we
+report the natural peak VRAM and confirm it stays under 8\,GiB on its
+own. We re-run the full pytest suite per variant and report warm-cache
+wall time.
+
+\subsection{Results}
+
+\begin{table}[t]
+\caption{Phase 3, RTX 6000, \texttt{VRAM\_CAP\_GIB=8}. Final scores
+match the uncapped run because the cap is non-binding for every
+variant.}
+\label{tab:rtx-capped}
+\begin{tabular}{lrrr}
+\toprule
+variant            & wall (s) & peak VRAM (MiB) & final \\
+\midrule
+minilm             & \textbf{40.3}  & 2{,}214 & 0.578 \\
+nomic\_st          & 36.2  & 2{,}706 & 0.563 \\
+qwen4b             & 37.1  & 5{,}392 & 0.592 \\
+nomic\_gpt4all\_gpu (kompute) & 36.2 & \textbf{2{,}124} & 0.558 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:rtx-capped} shows the four variants under the 8\,GiB
+cap. The largest peak is 5.4\,GiB for the 4\,B baseline; every other
+variant uses less than 3\,GiB. Final scores are identical to the
+uncapped run because the cap only reserves VRAM and does not change
+numerics. The Vulkan/kompute path used by GPT4All has the smallest
+footprint of the four, and provides a CUDA-free option for non-NVIDIA
+silicon.
+
+\subsection{Headline}
+
+The 23\,M MiniLM variant runs end to end in 40 seconds on a 4-core /
+8-GiB consumer-GPU profile and matches the 4\,B baseline within one
+percentage point on final score. The 4\,B baseline still runs, with
+5.4\,GiB peak VRAM, and remains the highest-quality choice for users
+who can spare the time. The system is not bottlenecked on memory at
+this profile; it is bottlenecked on extraction wall time during cold
+ingestion, which Phase 1.5 addresses.
+
+%% ------------------------------------------------------------------
+\section{Discussion}
+\label{sec:discussion}
+
+\textbf{Why a small embedder is enough on this corpus.} A 23\,M
+embedder produces noisier vectors than a 4\,B one, but the difference
+is recoverable when the FAISS top-50 still contains the right chunk in
+most queries. The cross-encoder reranker re-scores those 50 candidates
+on the actual question text and pushes the right one into the top
+five. On a much larger corpus this argument would weaken; the cost of
+recall@50 grows linearly with corpus size while the reranker cost is
+fixed.
+
+\textbf{Why pypdfium2 is enough on this corpus.} Plain-text textbooks
+have predictable section headings (\texttt{N.N Title}) and few tables.
+A regex post-processor recovers the same chunk boundaries as
+\texttt{docling}'s layout pass. On layout-heavy material (papers with
+multi-column equations, scanned PDFs), \texttt{docling} would still be
+the right default.
+
+\textbf{Threats to validity.} The 11-question benchmark suite is small
+and hand-written; the absolute final-score numbers should be read as
+relative comparisons rather than absolute quality. The
+\texttt{ideal\_retrieved\_chunks} field in the original
+\texttt{benchmarks.yaml} was calibrated against an older chunker
+schema; we report MiniLM cosine similarity proxies for retrieval-only
+quality on top of the keyword-coverage metric.
+
+%% ------------------------------------------------------------------
+\section{Software Artifacts}
+\label{sec:artifacts}
+
+The work is organized as one branch per feature on the project's git
+remote: \texttt{feat/parallel-extraction}, \texttt{feat/pypdfium-extractor},
+\texttt{feat/embedder-router}, \texttt{feat/pluggable-embedders}, plus a
+\texttt{tools} branch for the resource monitor and the experiment
+drivers (profiler, VRAM cap helper, per-variant index/pytest scripts),
+and an \texttt{experiments} branch that integrates all five and
+deposits per-experiment artifacts in chronological order. Each
+\texttt{feat/*} branch is a small surgical delta on \texttt{main} and
+is independently mergeable.
+
+%% ------------------------------------------------------------------
+\section{Conclusion}
+\label{sec:conclusion}
+
+Four targeted changes bring TokenSmith from a server-class RAG system
+to one that runs in 40 seconds on a 4-core / 8-GiB profile without
+losing answer quality. The headline lesson is that the cross-encoder
+reranker absorbs most of the embedding-quality gap on small corpora,
+which makes lightweight backends genuinely usable for local-first RAG.
+The remaining latency floor is cold extraction; Phase 1.5 cuts that to
+a few seconds on plain-text textbooks. We did not need new algorithms;
+we needed honest measurement and four small changes at the right
+seams.
+
+%% ------------------------------------------------------------------
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{refs}
+
+\end{document}
