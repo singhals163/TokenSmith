@@ -1,0 +1,106 @@
+{
+  "variant": "nomic_gpt4all_gpu",
+  "prefix": "phase3_nomic_gpt4all_gpu",
+  "embed_model": "nomic-embed-text-v1.5.f16.gguf",
+  "embed_backend": "gpt4all",
+  "gen_model": "models/qwen2.5-1.5b-instruct-q5_k_m.gguf",
+  "pytest_exit": 0,
+  "wall_time_s": 232.4,
+  "n_benchmarks": 11,
+  "mean_semantic_similarity": 0.7161468111655929,
+  "mean_keyword_similarity": 0.29473304473304474,
+  "mean_bleu": 0.026164471067129266,
+  "mean_final_score": 0.5581166487533873,
+  "per_benchmark": [
+    {
+      "id": "aggregation_grouping",
+      "semantic_similarity": 0.6663562059402466,
+      "keyword_similarity": 0.3333333333333333,
+      "bleu_similarity": 0.004364496366758428,
+      "final_score": 0.541472628712654,
+      "passed": false
+    },
+    {
+      "id": "acid_properties",
+      "semantic_similarity": 0.8406645059585571,
+      "keyword_similarity": 0.5,
+      "bleu_similarity": 0.0064919863778775105,
+      "final_score": 0.7129153162240982,
+      "passed": false
+    },
+    {
+      "id": "bptree",
+      "semantic_similarity": 0.739657461643219,
+      "keyword_similarity": 0.0,
+      "bleu_similarity": 0.0015536353278534094,
+      "final_score": 0.46228591352701187,
+      "passed": false
+    },
+    {
+      "id": "fd_normalization",
+      "semantic_similarity": 0.4619377851486206,
+      "keyword_similarity": 0.0,
+      "bleu_similarity": 0.008798072220836884,
+      "final_score": 0.2887111157178879,
+      "passed": false
+    },
+    {
+      "id": "sql_isolation",
+      "semantic_similarity": 0.8667795658111572,
+      "keyword_similarity": 0.375,
+      "bleu_similarity": 0.0230152382295015,
+      "final_score": 0.6823622286319733,
+      "passed": false
+    },
+    {
+      "id": "primary_foreign_keys",
+      "semantic_similarity": 0.9093102216720581,
+      "keyword_similarity": 0.5,
+      "bleu_similarity": 0.09522014145121781,
+      "final_score": 0.7558188885450363,
+      "passed": true
+    },
+    {
+      "id": "database_schema",
+      "semantic_similarity": 0.9292641878128052,
+      "keyword_similarity": 0.5714285714285714,
+      "bleu_similarity": 0.06315768345611852,
+      "final_score": 0.7950758316687174,
+      "passed": true
+    },
+    {
+      "id": "book_authors",
+      "semantic_similarity": 0.11411166936159134,
+      "keyword_similarity": 0.0,
+      "bleu_similarity": 0.010412225033714044,
+      "final_score": 0.07131979335099459,
+      "passed": false
+    },
+    {
+      "id": "aries_atomicity",
+      "semantic_similarity": 0.847652018070221,
+      "keyword_similarity": 0.375,
+      "bleu_similarity": 0.025977815553492364,
+      "final_score": 0.6704075112938881,
+      "passed": false
+    },
+    {
+      "id": "oltp_vs_analytics",
+      "semantic_similarity": 0.8122369647026062,
+      "keyword_similarity": 0.4444444444444444,
+      "bleu_similarity": 0.038327101450486394,
+      "final_score": 0.6743147696057955,
+      "passed": false
+    },
+    {
+      "id": "lossy_decomposition",
+      "semantic_similarity": 0.6896443367004395,
+      "keyword_similarity": 0.14285714285714285,
+      "bleu_similarity": 0.010490786270565041,
+      "final_score": 0.4845991390092032,
+      "passed": false
+    }
+  ],
+  "peak_vram_mib": 2124,
+  "vram_cap_gib": null
+}

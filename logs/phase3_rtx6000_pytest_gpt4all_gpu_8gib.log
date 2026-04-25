@@ -1,0 +1,13 @@
+[nomic_gpt4all_gpu] launching: /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/bin/python -m pytest tests/test_benchmarks.py --config=/storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/phase3_nomic_gpt4all_gpu_pytest_config.yaml --index-prefix=phase3_nomic_gpt4all_gpu --model-path=models/qwen2.5-1.5b-instruct-q5_k_m.gguf --embed-model=nomic-embed-text-v1.5.f16.gguf --output-mode=terminal --artifacts_dir=index/sections -s -q
+[nomic_gpt4all_gpu] pytest exit=0 wall=36.2s log=/storage/scratch1/1/ssinghal88/TokenSmith/logs/phase3_pytest_nomic_gpt4all_gpu.log
+
+================================================================================================
+variant      backend                  n  sem_sim   kw_sim    final   wall_s
+------------------------------------------------------------------------------------------------
+nomic_gpt4all_gpu gpt4all                 11    0.716    0.295    0.558     36.2
+================================================================================================
+Wrote /storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/pytest_all_summary.json
+
+real	0m36.669s
+user	0m33.990s
+sys	0m7.290s

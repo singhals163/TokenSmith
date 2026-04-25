@@ -51,6 +51,13 @@ VARIANTS = [
         "embed_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embed_backend": "sentence_transformers",
     },
+    {
+        "name": "nomic_gpt4all_gpu",
+        "prefix": "phase3_nomic_gpt4all_gpu",
+        "embed_model": "nomic-embed-text-v1.5.f16.gguf",
+        "embed_backend": "gpt4all",
+        "embed_device": "kompute",
+    },
 ]
 
 
@@ -88,6 +95,8 @@ def build_config_yaml(variant: dict) -> pathlib.Path:
         "metrics": ["semantic", "keyword", "bleu"],
         "system_prompt_mode": "baseline",
     }
+    if variant.get("embed_device"):
+        cfg["embed_device"] = variant["embed_device"]
     path = OUT_DIR / f"{variant['prefix']}_pytest_config.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.safe_dump(cfg))

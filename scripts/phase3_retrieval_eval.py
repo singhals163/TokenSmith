@@ -123,6 +123,7 @@ def main() -> None:
     ap.add_argument("--pool", type=int, default=50, help="candidates to pull from FAISS")
     ap.add_argument("--out-dir", default="experiments/phase3")
     ap.add_argument("--n-gpu-layers", type=int, default=-1, help="only used for llama_cpp backend; -1=all, 0=CPU-only")
+    ap.add_argument("--device", default=None, help="device hint; for gpt4all backend pass 'cuda' or 'kompute' to force GPU")
     args = ap.parse_args()
 
     artifacts_dir = pathlib.Path(args.artifacts_dir)
@@ -136,6 +137,8 @@ def main() -> None:
     kwargs = {}
     if args.backend == "llama_cpp":
         kwargs["n_gpu_layers"] = args.n_gpu_layers
+    if args.device:
+        kwargs["device"] = args.device
     embedder = CachedEmbedder(args.model, backend=args.backend, **kwargs)
 
     per_q = []

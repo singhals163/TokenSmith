@@ -67,6 +67,7 @@ def build_index(
     use_headings: bool = False,
     embed_backend: str = "llama_cpp",
     profile_output_dir: Optional[os.PathLike] = None,
+    embedder_kwargs: Optional[Dict] = None,
 ) -> None:
     """
     Extract sections, chunk, embed, and build both FAISS and BM25 indexes.
@@ -173,7 +174,10 @@ def build_index(
 
         # PHASE 2+3: Use CachedEmbedder with pluggable backend
         print(f"Embedding backend: {embed_backend}")
-        embedder = CachedEmbedder(embedding_model_path, backend=embed_backend)
+        ek = dict(embedder_kwargs or {})
+        if ek:
+            print(f"Embedder kwargs: {ek}")
+        embedder = CachedEmbedder(embedding_model_path, backend=embed_backend, **ek)
 
         # PHASE 2 OPTIMIZATION: Dynamic Hardware Routing (only meaningful for llama_cpp)
         has_gpu = detect_gpu()

@@ -35,6 +35,12 @@ VARIANTS = {
         "backend": "gpt4all",
         "prefix": "phase3_nomic_gpt4all",
     },
+    "nomic_gpt4all_gpu": {
+        "model_path": "nomic-embed-text-v1.5.f16.gguf",
+        "backend": "gpt4all",
+        "prefix": "phase3_nomic_gpt4all_gpu",
+        "embedder_kwargs": {"device": "kompute"},
+    },
     "nomic_st": {
         "model_path": "nomic-ai/nomic-embed-text-v1.5",
         "backend": "sentence_transformers",
@@ -88,6 +94,7 @@ def main() -> None:
         use_headings=False,
         embed_backend=variant["backend"],
         profile_output_dir=args.profile_dir,
+        embedder_kwargs=variant.get("embedder_kwargs"),
     )
 
 

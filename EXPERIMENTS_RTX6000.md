@@ -1,6 +1,7 @@
 # TokenSmith — RTX 6000 (sm_75) Experiment Plan
 
 **Written 2026-04-24. Read this top-to-bottom before running anything.**
+**Updated 2026-04-24 with prior-session status — see §0.0 first.**
 
 This document is a self-contained handoff for a fresh Claude Code session that
 will run Phases 1, 2, and 3 of TokenSmith on a PACE Phoenix node allocated on
@@ -11,6 +12,181 @@ mobile class).
 
 > **Sibling doc:** `HANDOFF.md` — end-of-V100-session state. Reference it for
 > background; this file supersedes it for anything RTX-6000-specific.
+
+## 0.0. Prior-session status — READ FIRST (continuation handoff)
+
+A previous session on this same RTX 6000 allocation ran most of this plan.
+**Do not redo the completed phases.** The remaining work is enumerated in
+§0.0.3 below; jump to those sections directly.
+
+### 0.0.1. What was completed and pushed
+
+| Phase | Branch (origin) | Status | Key result |
+|---|---|---|---|
+| P1 docling baseline (4 workers) | `phase1-rtx6000` | ✅ done, commit `20456fd` | 499 s wall (8 min 20 s) on Silberschatz 2195pp. Artifact: `experiments/phase1/workers_4_chunk_500_rtx6000/profiling.txt`. |
+| P1-v2 pypdfium fast-path | `phase1-v2-rtx6000` | ✅ done, commit `537d75b` | extraction 8.66 s, reindex 22.6 s, peak VRAM 3.4 GiB, end-to-end pytest `final=0.606`. Logs: `logs/phase1v2_rtx6000_*.log`. |
+| P3 uncapped, minilm/nomic_st/qwen4b | `phase3-rtx6000` | ✅ done, commit `5640bc9` | finals 0.5775 / 0.5627 / 0.5922. Artifacts: `experiments/phase3/rtx6000/`. |
+| P3 capped 8 GiB, minilm/nomic_st/qwen4b | `phase3-rtx6000` (same commit) | ✅ done | same finals; peak VRAM 2,214 / 2,706 / 5,392 MiB — cap held with headroom. Artifacts: `experiments/phase3/rtx6000_8gib/`. |
+| `experiments/rtx6000_summary.md` | `phase3-rtx6000` | ✅ written, but stale on one point — see §0.0.4 below | — |
+
+### 0.0.2. What was deliberately skipped
+
+| Item | Why skipped | Decision |
+|---|---|---|
+| P2 standalone re-ingest (`phase2-rtx6000` branch, `src.main index` flow) | The P1-v2 reindex exercises the same `build_index` code path with Qwen3-Embedding-4B on the same corpus, so the prior session reused those numbers for the P2 row. | **Re-open this in the next session — see §0.0.3 item A.** |
+| P3 GPT4All-GPU variant | CUDA 11 runtime / `libcublas.so.11` not available on `gpu-rtx6000` (matches runbook §8.1 expectation). No CPU-sample fallback was captured either. | **Re-open this in the next session — see §0.0.3 item B.** |
+
+### 0.0.3. Remaining work for the next session
+
+Source the env, then run only items A and B. Skip everything in §4.1, §4.2,
+and §4.4.1 / §4.4.2 / §4.4.3 / §4.4.4 / §4.4.5 *for the three variants that
+already ran* — those artifacts are already on `phase3-rtx6000`.
+
+```bash
+cd /storage/scratch1/1/ssinghal88/TokenSmith
+conda activate tokensmith
+source .phase3_env.sh
+nvidia-smi --query-gpu=name,memory.total,compute_cap --format=csv  # confirm RTX 6000 sm_75
+```
+
+**A. Phase 2 standalone re-ingest (`phase2` → `phase2-rtx6000`)**
+
+The P1-v2 reindex shortcut is fine for the writeup table, but the writeup
+expects a `phase2-rtx6000` branch with the `phase2`-tree's actual `src.main
+index` flow exercised end-to-end. Run:
+
+```bash
+git checkout phase2
+source .phase3_env.sh   # re-source after branch switch
+
+# Edit config/config.yaml: ensure embed_model points at the Q4 GGUF that
+# ships in models/ — see runbook §8.2. Specifically:
+#   embed_model: "models/Qwen3-Embedding-4B-Q4_K_M.gguf"
+# (do NOT commit this edit — it's a runtime workaround on this branch only)
+
+mkdir -p experiments/phase2/rtx6000
+python -m src.main index \
+    --config config/config.yaml \
+    --index_prefix phase2_rtx6000_qwen4b \
+    2>&1 | tee logs/phase2_rtx6000_index.log
+
+# Then the 8-GiB-capped variant (the headline laptop number for Phase 2):
+mkdir -p experiments/phase2/rtx6000_8gib
+VRAM_CAP_GIB=8 VRAM_CAP_GIB_AUTO=1 \
+    python -m src.main index \
+    --config config/config.yaml \
+    --index_prefix phase2_rtx6000_qwen4b_8gib \
+    2>&1 | tee logs/phase2_rtx6000_8gib.log
+
+# Capture profiling/resource artifacts
+cp experiments/phase2/profiling_indexing.txt experiments/phase2/rtx6000/
+# (if `phase2-rtx6000` runs produce a *_resources.json, copy it too)
+
+git checkout -b phase2-rtx6000
+git add experiments/phase2/rtx6000 experiments/phase2/rtx6000_8gib logs/phase2_rtx6000*.log
+git commit -m "Phase 2 RTX 6000 rerun: Qwen3-Embedding-4B ingest, uncapped + 8 GiB cap"
+git push -u origin phase2-rtx6000
+```
+
+**Expected:** Step 2 (embedding) wall in the 200–500 s range cold (Turing fp16
+≈ 0.5× V100 fp16); peak VRAM ~3.5 GiB uncapped, similar capped (cap is not
+binding for this model, mirrors P3 qwen4b). Document routing decision from
+the log (should pick GPU because `nvidia-smi` is present).
+
+**Fallback if `src.main index` is fragile under the current env** (per
+runbook §4.3 alternative path), use the Phase-3 driver on the `phase2`
+branch — same code path, more instrumentation:
+
+```bash
+python -m scripts.run_phase3_index --variant qwen4b \
+    --profile-dir experiments/phase2/rtx6000 \
+    2>&1 | tee logs/phase2_rtx6000_index.log
+```
+
+**B. Phase 3 GPT4All variant (`phase3-results` → augment `phase3-rtx6000`)**
+
+```bash
+git checkout phase3-rtx6000
+source .phase3_env.sh
+
+# Try GPU path first (fast — fails fast if CUDA 11 libs absent):
+python -m scripts.run_phase3_index --variant nomic_gpt4all_gpu \
+    --profile-dir experiments/phase3/rtx6000 \
+    2>&1 | tee logs/phase3_rtx6000_index_gpt4all_gpu.log
+
+# If the above fails with `libcublas.so.11: cannot open shared object file`
+# (or any CUDA-11 link error), do NOT spend more than ~10 min trying to fix
+# it — it's a known PACE constraint on gpu-rtx6000. Run the CPU sample
+# fallback instead, which still produces a projected full-corpus throughput:
+python -m scripts.phase3_gpt4all_throughput \
+    --sample-size 100 --batch-size 32 --device cpu \
+    --prefix phase3_nomic_gpt4all_rtx6000 \
+    --out-dir experiments/phase3/rtx6000 \
+    2>&1 | tee logs/phase3_rtx6000_gpt4all_cpu_sample.log
+
+# If GPU path succeeded, also run retrieval-eval + pytest for the variant:
+python -m scripts.phase3_retrieval_eval \
+    --prefix phase3_nomic_gpt4all_gpu \
+    --model nomic-ai/nomic-embed-text-v1.5 \
+    --backend gpt4all \
+    --out-dir experiments/phase3/rtx6000 \
+    2>&1 | tee logs/phase3_rtx6000_retrieval_gpt4all_gpu.log
+
+python -m scripts.phase3_full_pytest --only nomic_gpt4all_gpu \
+    2>&1 | tee logs/phase3_rtx6000_pytest_gpt4all_gpu.log
+cp experiments/phase3/phase3_nomic_gpt4all_gpu_pytest_*.{json,jsonl,yaml} \
+    experiments/phase3/rtx6000/ 2>/dev/null || true
+
+# 8-GiB-capped re-run (only if the GPU path worked):
+VRAM_CAP_GIB=8 VRAM_CAP_GIB_AUTO=1 \
+    python -m scripts.phase3_full_pytest --only nomic_gpt4all_gpu \
+    2>&1 | tee logs/phase3_rtx6000_pytest_gpt4all_gpu_8gib.log
+mkdir -p experiments/phase3/rtx6000_8gib
+cp experiments/phase3/phase3_nomic_gpt4all_gpu_pytest_*.{json,jsonl} \
+    experiments/phase3/rtx6000_8gib/
+
+git add experiments/phase3/rtx6000 experiments/phase3/rtx6000_8gib logs/phase3_rtx6000_*gpt4all*.log
+git commit -m "Phase 3 RTX 6000: add GPT4All variant ($([ GPU succeeded ] && echo 'GPU' || echo 'CPU fallback sample'))"
+git push origin phase3-rtx6000
+```
+
+**C. Update `experiments/rtx6000_summary.md`**
+
+After A and B succeed, edit `experiments/rtx6000_summary.md`:
+
+1. Replace the Phase 2 section (currently "Not rerun separately on RTX
+   6000.") with the new numbers from §A.
+2. Add the GPT4All row (or rows) to the Phase 3 uncapped + capped tables.
+3. Fix the stale paragraph at the bottom (§0.0.4 below).
+4. Update the §"Branches pushed" list to include `phase2-rtx6000`.
+
+Commit on `phase3-rtx6000` (the inclusive branch, per runbook §6) and push.
+
+### 0.0.4. Known stale claim in `experiments/rtx6000_summary.md`
+
+The bottom of `rtx6000_summary.md` currently says:
+
+> Phase 1 (`phase1-rtx6000`) and Phase 2 (`phase2-rtx6000`) branches are not
+> created: neither phase was rerun on this allocation…
+
+The Phase 1 half of that sentence is **wrong** — `phase1-rtx6000` was
+created and pushed (commit `20456fd`, 499 s docling result) after the
+summary was last edited. When you do step C above, change that paragraph
+to reflect that both `phase1-rtx6000` and `phase2-rtx6000` exist and push
+the corrected summary.
+
+### 0.0.5. Reproduction checklist for the continuation session
+
+- [ ] `conda activate tokensmith` succeeds on the new allocation
+- [ ] `source .phase3_env.sh` — no errors
+- [ ] `nvidia-smi` shows 1 × Quadro RTX 6000, sm_75, 24 GB
+- [ ] §A.1 `phase2_rtx6000_qwen4b` index built, `experiments/phase2/rtx6000/` populated
+- [ ] §A.2 `phase2_rtx6000_qwen4b_8gib` built, `peak_vram_mib ≤ 8192`
+- [ ] `phase2-rtx6000` branch created, committed, pushed
+- [ ] §B GPT4All run: either GPU path succeeded (full retrieval+pytest+capped) or CPU sample fallback completed
+- [ ] GPT4All artifacts under `experiments/phase3/rtx6000/` (and `rtx6000_8gib/` if GPU succeeded), committed on `phase3-rtx6000`, pushed
+- [ ] `experiments/rtx6000_summary.md` updated with Phase 2 numbers, GPT4All row, and the §0.0.4 stale-claim fix; committed and pushed
+- [ ] All four `*-rtx6000` branches present on origin: `phase1-rtx6000`, `phase1-v2-rtx6000`, `phase2-rtx6000`, `phase3-rtx6000`
 
 ## 0. TL;DR for a new Claude session
 

@@ -211,8 +211,13 @@ class GPT4AllEmbedder(BaseEmbedder):
         self.model_path = model_path
         cache_dir = os.environ.get("GPT4ALL_MODEL_PATH") or str(Path.home() / ".cache" / "gpt4all")
         Path(cache_dir).mkdir(parents=True, exist_ok=True)
+        device = kwargs.get("device")
+        kw = {"model_name": model_path, "model_path": cache_dir, "n_threads": kwargs.get("n_threads")}
+        if device:
+            kw["device"] = device
         with TimerBlock("Embedder [Main]: Load Model to Memory"):
-            self.model = Embed4All(model_name=model_path, model_path=cache_dir, n_threads=kwargs.get("n_threads"))
+            self.model = Embed4All(**kw)
+        self.device = device or "cpu"
 
     def encode(
         self,

@@ -1,0 +1,21 @@
+
+============================================================
+                 PIPELINE PROFILING RESULTS                 
+============================================================
+Function / Logic Block              | Calls    | Total Time (s)
+------------------------------------------------------------
+[Block] Step 2: Vector Embeddings Generation | 1        | 14.9595
+Embedder [Main]: Load Model to Memory | 1        | 12.2758
+[Block] Step 1: Chunking & Metadata Parsing | 1        | 8.7918
+Chunking: DocumentChunker.chunk     | 775      | 8.7306
+Chunking: SectionRecursiveStrategy.chunk | 775      | 8.7295
+CachedEmbedder: Check Cache         | 1        | 2.5500
+Cache: Read SQLite                  | 2664     | 2.5410
+[Block] Step 4: Build BM25 Index    | 1        | 1.1571
+Helper: preprocess_for_bm25         | 2664     | 0.4338
+[Block] Step 3: Build FAISS Index   | 1        | 0.3600
+[Block] Step 5: Dump Index Artifacts | 1        | 0.3336
+[Block] Extract Sections from Markdown | 1        | 0.1974
+Extraction: extract_sections_from_markdown | 1        | 0.1974
+Extraction: preprocess_extracted_section | 774      | 0.1122
+============================================================
