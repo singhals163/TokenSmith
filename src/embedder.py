@@ -109,31 +109,34 @@ class SentenceTransformer:
         if not texts:
             return np.array([], dtype=np.float32).reshape(0, -1)
         
-        # Process in batches
+        # Sort by length descending so each batch contains similar-sized texts;
+        # llama.cpp pads to the longest text in the batch, so this minimizes wasted compute.
+        indices = np.argsort([len(t) for t in texts])[::-1]
+        sorted_texts = [texts[i] for i in indices]
+
         embeddings = []
-        num_batches = (len(texts) + batch_size - 1) // batch_size
+        num_batches = (len(sorted_texts) + batch_size - 1) // batch_size
 
         for i in tqdm(range(num_batches), desc="Encoding", disable=not show_progress_bar):
             start_idx = i * batch_size
-            end_idx = min((i + 1) * batch_size, len(texts))
-            batch_texts = texts[start_idx:end_idx]
-            
+            end_idx = min((i + 1) * batch_size, len(sorted_texts))
+            batch_texts = sorted_texts[start_idx:end_idx]
+
             try:
-                # IMPORTANT CHANGE: Pass the entire LIST to the model at once.
-                # This triggers the native C++/Metal batch processing logic.
                 response = self.model.create_embedding(batch_texts)
-                
-                # Extract the list of embedding vectors from the response
                 batch_embeddings = [item['embedding'] for item in response['data']]
                 embeddings.extend(batch_embeddings)
-                
             except Exception as e:
                 print(f"Error encoding batch: {e}")
-                # Fallback: encode one by one if batch fails, or append zeros
                 for _ in batch_texts:
                     embeddings.append([0.0] * self.embedding_dimension)
-                
-        vecs = np.array(embeddings, dtype=np.float32)
+
+        # Restore original order
+        inverse_indices = np.empty_like(indices)
+        inverse_indices[indices] = np.arange(len(indices))
+        ordered_embeddings = [embeddings[i] for i in inverse_indices]
+
+        vecs = np.array(ordered_embeddings, dtype=np.float32)
         
         if normalize: # do L2 normalization
             norms = np.linalg.norm(vecs, axis=1, keepdims=True)

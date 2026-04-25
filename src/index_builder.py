@@ -10,13 +10,15 @@ Entry point (called by main.py):
 import os
 import pickle
 import pathlib
+import platform
 import re
 import json
+import subprocess
 from typing import List, Dict
 
 import faiss
 from rank_bm25 import BM25Okapi
-from src.embedder import SentenceTransformer
+from src.embedder import CachedEmbedder
 
 from src.preprocessing.chunking import DocumentChunker, ChunkConfig
 from src.preprocessing.extraction import extract_sections_from_markdown
@@ -29,8 +31,19 @@ os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
-# Default keywords to exclude sections
 DEFAULT_EXCLUSION_KEYWORDS = ['questions', 'exercises', 'summary', 'references']
+
+
+def detect_gpu() -> bool:
+    """True if a CUDA (NVIDIA) or Metal (Apple Silicon) GPU is reachable."""
+    try:
+        subprocess.check_output("nvidia-smi", shell=True, stderr=subprocess.STDOUT)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        return True
+    return False
 
 # ------------------------ Main index builder -----------------------------
 
@@ -176,29 +189,31 @@ def build_index(
 
     # Step 2: Create embeddings for FAISS index
     print(f"Embedding {len(all_chunks):,} chunks with {pathlib.Path(embedding_model_path).stem} ...")
-    embedder = SentenceTransformer(embedding_model_path)
+    embedder = CachedEmbedder(embedding_model_path)
 
-    if use_multiprocessing:
+    # Hardware router: prefer GPU sequential (high-throughput, single allocator)
+    # over CPU multi-process. Falls back to CPU pool only when no GPU is found.
+    has_gpu = detect_gpu()
+    if has_gpu:
+        print("Hardware Router: GPU detected; using sequential high-throughput path.")
+        should_multiprocess = False
+    else:
+        print("Hardware Router: no GPU detected; using CPU multi-process pool.")
+        should_multiprocess = use_multiprocessing
+
+    if should_multiprocess:
         print("Starting multi-process pool for embeddings...")
-        # Start the pool. Adjust number of workers as needed.
-        pool = embedder.start_multi_process_pool(workers=4)
+        pool = embedder.start_multi_process_pool()
         try:
-            # Compute embeddings in parallel
-            embeddings = embedder.encode_multi_process(
-                all_chunks, 
-                pool, 
-                batch_size=32
-            )
+            embeddings = embedder.encode_multi_process(all_chunks, pool, batch_size=32)
         finally:
-            # Stop the pool to prevent hanging processes
             embedder.stop_multi_process_pool(pool)
     else:
-        # Standard single-process embedding
         embeddings = embedder.encode(
-            all_chunks, 
-            batch_size=8, 
+            all_chunks,
+            batch_size=32,
             show_progress_bar=True,
-            convert_to_numpy=True 
+            convert_to_numpy=True,
         )
 
     # Step 3: Build FAISS index
