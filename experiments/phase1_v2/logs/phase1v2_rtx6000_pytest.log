@@ -1,0 +1,11 @@
+[qwen4b_pypdfium] launching: /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/bin/python -m pytest tests/test_benchmarks.py --config=/storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/phase1v2_pypdfium_qwen4b_pytest_config.yaml --index-prefix=phase1v2_pypdfium_qwen4b --model-path=models/qwen2.5-1.5b-instruct-q5_k_m.gguf --embed-model=models/Qwen3-Embedding-4B-Q4_K_M.gguf --output-mode=terminal --artifacts_dir=index/sections -s -q
+[qwen4b_pypdfium] pytest exit=-15 wall=1174.8s log=/storage/scratch1/1/ssinghal88/TokenSmith/logs/phase3_pytest_qwen4b_pypdfium.log
+
+================================================================================================
+variant      backend                  n  sem_sim   kw_sim    final   wall_s
+------------------------------------------------------------------------------------------------
+qwen4b_pypdfium llama_cpp               11    0.756    0.357    0.606   1174.8
+================================================================================================
+Wrote /storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/pytest_all_summary.json
+143.44user 12.32system 19:36.33elapsed 13%CPU (0avgtext+0avgdata 5104288maxresident)k
+7800608inputs+1240outputs (25098major+2300321minor)pagefaults 0swaps

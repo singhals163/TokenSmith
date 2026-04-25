@@ -1,0 +1,7 @@
+Planned 5 ranges over 2195 pages, workers=4
+Extraction map phase   : 3.26s
+Total wall time        : 8.66s
+Pages                  : 2195
+Output                 : data/extracted_pypdfium_rtx6000/textbook--extracted_markdown.md
+Markdown size          : 3,240,367 chars
+Promoted ## headings   : 1395
