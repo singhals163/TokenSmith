@@ -32,18 +32,23 @@
 \begin{abstract}
 TokenSmith is a local-first RAG system for textbook question answering.
 The original implementation is fully functional but is impractical for
-a new user trying it on a fresh textbook: cold ingestion before the
-first answer takes close to three hours on a server, and longer on a
-laptop. We re-target the system for consumer hardware (one GPU with at
-most 8\,GiB of memory, four CPU cores) by making four pipeline changes:
-parallel PDF extraction, a \texttt{pypdfium2} fast extraction path, a
-hardware-aware embedding router with length-sorted batches, and a
-pluggable embedder that can target \texttt{llama.cpp}, GPT4All (CUDA or
-Vulkan), or HuggingFace \texttt{sentence-transformers} at a fixed call
-site. On a Quadro RTX 6000 capped at 8\,GiB, every variant stays well
-under the cap. A 23\,M MiniLM embedder finishes the end-to-end pytest
-suite in 40 seconds at a final score of 0.578, within 1.4 points of
-the 4\,B baseline (0.592) which itself fits in 5.4\,GiB. \shivam{Can you mention the most efficient extraction time and embedding time, and then if you have a metric say that the full run on a consumer grade laptop from ingesting to the generation of first response would take approx x seconds on our framework. The drop in accuracy is y. }
+a new user trying it on a fresh textbook, since cold ingestion before
+the first answer takes close to three hours on a server and longer on
+a laptop. We re-target the system for consumer hardware (one GPU with
+at most 8\,GiB of memory, four CPU cores) by making four pipeline
+changes: parallel PDF extraction, a \texttt{pypdfium2} fast extraction
+path, a hardware-aware embedding router with length-sorted batches,
+and a pluggable embedder that can target \texttt{llama.cpp}, GPT4All
+(CUDA or Vulkan), or HuggingFace \texttt{sentence-transformers} at a
+fixed call site. On a Quadro RTX 6000 capped at 8\,GiB, every variant
+stays well under the cap. The most efficient configuration
+(\texttt{pypdfium2} extractor + 23\,M MiniLM embedder) extracts the
+2{,}195-page textbook in 8.66\,s, finishes embedding in about 30\,s,
+and answers each query in about 3.7\,s, so cold ingestion-to-first-
+answer is roughly 45 seconds on a 4-core / 8-GiB consumer machine. The
+accuracy drop relative to the 4\,B baseline is 1.4 points on the
+final score (0.578 vs.\ 0.592); the 4\,B baseline itself fits in
+5.4\,GiB.
 \end{abstract}
 
 \keywords{retrieval-augmented generation, local inference, embeddings,
@@ -55,15 +60,25 @@ consumer GPU, FAISS}
 
 The original TokenSmith assumes a server with a large GPU. The cold
 ingestion path (extract a PDF to markdown, chunk, embed, build FAISS
-and BM25) dominates time-to-first-token: \shivam{use of : is too frequent, please remove them, they're unnencessary at a lot of places} on a 64-core server the
+and BM25) dominates time-to-first-token. On a 64-core server the
 sequential \texttt{docling} extraction of the 2{,}195-page Silberschatz
 \emph{Database System Concepts} textbook alone takes about 9{,}650\,s
 (close to 2 hours and 40 minutes), while the rest of the cores sit
-idle. Indexing adds another few minutes \shivam{Do we have a number, I thought this also takes hours on simple cpus, and y minutes with baseline gpus?}, dominated by the 4\,B
-\texttt{Qwen3-Embedding} model; retrieval and generation take seconds\shivam{Add the exact numbers}.
-A new user pointing TokenSmith at a fresh textbook therefore waits
-hours before the first answer comes back. On a 4-core laptop the same
-extractor runs even longer \shivam{Do we have an estimate of run time with these resources, you can simply add the baseline extraction time (the one with single core), + indexing time, + generation time on RTX6000 gpu with llama model}. The system works, but in practice no
+idle. Indexing adds another 5 to 7 minutes on a server GPU (305\,s on
+A100, 426\,s on V100), and several hours on a CPU-only host (the
+GPT4All Nomic backend takes a projected 7{,}212\,s on the same corpus
+without a GPU). Indexing is dominated by the 4\,B \texttt{Qwen3-Embedding}
+model. Retrieval and generation take about 3 to 4 seconds per query
+on the same hardware. A new user pointing TokenSmith at a fresh textbook
+therefore waits multiple hours before the first answer comes back.
+
+On a 4-core laptop with the original sequential code, the picture is
+worse. Extraction runs at single-core speed (about 9{,}650\,s per
+textbook, since each \texttt{docling} worker pegs one core regardless
+of host CPU count); indexing on a consumer GPU like the RTX 6000 adds
+roughly 30 to 60 seconds once the model is loaded; the first answer takes
+about 4\,s. Cold time-to-first-token is therefore close to 2 hours
+and 45 minutes on a laptop. The system works, but in practice no
 student would sit through a first run.
 
 The goal of this project is to make ingestion fast enough that a
@@ -89,7 +104,7 @@ consumer-GPU proxy.
 \section{Phase 1: Faster PDF Extraction}
 
 The single largest contributor to time-to-first-token is PDF
-extraction. We attack it twice:\shivam{get rid of colon} first by parallelizing the existing
+extraction. We attack it twice. First by parallelizing the existing
 \texttt{docling} backend across CPU workers, then by replacing the
 backend itself for plain-text textbooks where layout analysis is
 unnecessary.
@@ -119,22 +134,17 @@ $\{1, 2, 4, 8, 16, 32, 62\}$. Table~\ref{tab:phase1} reports the
 total wall time per configuration and Figure~\ref{fig:extraction-scaling}
 plots the same data on a log y-axis.
 
-\shivam{make the table footnote size, also, make it horizontal instead of vertical, it is consuming unnecessary space this way. }
 \begin{table}[h]
 \caption{Phase 1: docling extraction on the 2{,}195-page textbook
 (64-core server host).}
 \label{tab:phase1}
-\begin{tabular}{rrr}
+\footnotesize
+\begin{tabular}{lrrrrrrr}
 \toprule
-workers & wall (s) & speedup \\
+workers   & 1       & 2       & 4       & 8       & 16      & 32      & 62 \\
 \midrule
-1  & 9{,}650 & 1.0$\times$ \\
-2  & 4{,}289 & 2.3$\times$ \\
-4  & 2{,}018 & 4.8$\times$ \\
-8  & 2{,}252 & 4.3$\times$ \\
-16 & 1{,}116 & 8.7$\times$ \\
-32 & 535     & 18.0$\times$ \\
-62 & 382     & \textbf{25.3$\times$} \\
+wall (s)  & 9{,}650 & 4{,}289 & 2{,}018 & 2{,}252 & 1{,}116 & 535     & 382 \\
+speedup   & 1.0$\times$ & 2.3$\times$ & 4.8$\times$ & 4.3$\times$ & 8.7$\times$ & 18.0$\times$ & \textbf{25.3$\times$} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -152,7 +162,7 @@ count.}
 Wall time scales roughly inversely with worker count, with one
 exception at 8 workers where the chosen chunk size happens to
 oversubscribe per-core caches. Going from 1 to 62 workers gives a
-$25.3\times$ speedup. That speedup is real but it is not portable: a
+$25.3\times$ speedup. That speedup is real but it is not portable; a
 student does not have 62 cores at home. The 4-worker configuration is
 the realistic consumer setting, and it still takes 2{,}018 seconds
 (close to 34 minutes) for one textbook. That is below the original
@@ -177,12 +187,18 @@ analysis.
 
 On the RTX 6000 host (4 CPU cores), full extraction drops from
 2{,}018\,s with \texttt{docling} (the 4-worker number above) to
-8.66\,s with \texttt{pypdfium2}, a roughly 230$\times$ \shivam{highlight the numbers in these paragraph, they're real massive win} improvement on
-this hardware. End-to-end final score on the regenerated index is
-0.606, slightly above the 0.592 \shivam{This is second massive win} we get with the \texttt{docling}
-pipeline; the regex-based heading promotion recovers section
-boundaries reliably without the layout-analysis pass.
-\shivam{Also add a line for comparing the baseline, sequential single worker run against pypdfium2 with 4 workers}
+\textbf{8.66\,s} with \texttt{pypdfium2}, a roughly $\mathbf{230\times}$
+improvement on this hardware. End-to-end final score on the
+regenerated index is \textbf{0.606}, slightly \emph{above} the 0.592
+we get with the \texttt{docling} pipeline; the regex-based heading
+promotion recovers section boundaries reliably without the
+layout-analysis pass. So we cut wall time by two orders of magnitude
+and answer quality goes up, not down.
+
+Compared to the original baseline (sequential single-worker
+\texttt{docling} at 9{,}650\,s), \texttt{pypdfium2} with 4 workers is
+roughly $\mathbf{1{,}100\times}$ faster end to end on the same
+extraction task.
 
 \section{Phase 2: Hardware Router and Batch Sorting}
 
@@ -238,10 +254,11 @@ working.
 
 Two adjacent fixes ship in this phase. We add a sentence-level BLEU-4
 metric with NIST method-1 smoothing under \texttt{tests/metrics/bleu.py}.
-We also fix a pollution bug in \texttt{tests/metrics/semantic.py}: the
-original code set \texttt{CUDA\_VISIBLE\_DEVICES=''} at module import,
-which silently disabled the GPU for any sibling process in the same
-interpreter. We pin the scoring model to \texttt{device='cpu'} instead.
+We also fix a pollution bug in \texttt{tests/metrics/semantic.py}.
+The original code set \texttt{CUDA\_VISIBLE\_DEVICES=''} at module
+import, which silently disabled the GPU for any sibling process in the
+same interpreter. We pin the scoring model to \texttt{device='cpu'}
+instead.
 End-to-end pytest wall on a typical V100 run drops from $\sim$700\,s to
 $\sim$45\,s.
 
