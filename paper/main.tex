@@ -138,7 +138,6 @@ plots the same data on a log y-axis.
 \caption{Phase 1: docling extraction on the 2{,}195-page textbook
 (64-core server host).}
 \label{tab:phase1}
-\footnotesize
 \begin{tabular}{lrrrrrrr}
 \toprule
 workers   & 1       & 2       & 4       & 8       & 16      & 32      & 62 \\
@@ -162,7 +161,7 @@ count.}
 Wall time scales roughly inversely with worker count, with one
 exception at 8 workers where the chosen chunk size happens to
 oversubscribe per-core caches. Going from 1 to 62 workers gives a
-$25.3\times$ speedup. That speedup is real but it is not portable; a
+$25.3\times$ speedup. That speedup is real but it is not practical; a
 student does not have 62 cores at home. The 4-worker configuration is
 the realistic consumer setting, and it still takes 2{,}018 seconds
 (close to 34 minutes) for one textbook. That is below the original
@@ -218,6 +217,8 @@ path with \texttt{batch\_size=32}; otherwise it uses a CPU
 \texttt{multiprocessing.Pool} with the \texttt{mmap}'d GGUF shared
 across workers. This avoids a CPU pool fighting the GPU's allocator on
 mixed hosts.
+
+\shivam{Can you explain what do you mean by warm v/s cold starts, do you have metrics for each case with all warm v/s all cold starts? Can you add the mem size of RTX 6000, also what do you mean that the others were 64 core, they were not, and it doesn't even matter because anyways we'll be using just the gpu, there's no cpu parallelization task, so the number of cores that the gpu has do not matter, remove them. If you have a cold start metric for RTX that will be awesome. Also, what is the baseline,  how much time did it take earlier without our improvements v/s how much time does it take now, do you have that information available? If not reply in a comment, because I've time to run these baseline experiments. Also you can add another section talking about the improvements and this could be one of the improvements if you can't find the baseline values.}
 
 \begin{table}[h]
 \caption{Phase 2: Step 2 (embedding) wall time on 2{,}664 chunks.}
