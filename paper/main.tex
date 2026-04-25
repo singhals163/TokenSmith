@@ -5,6 +5,8 @@
 
 \usepackage{booktabs}
 
+\newcommand{\shivam}[1]{\textcolor{teal}{[shivam: #1]}}
+
 \setcopyright{none}
 \acmConference[CS 6423]{CS 6423 Course Project}{Spring 2026}{Georgia Tech}
 \acmDOI{}
@@ -16,18 +18,18 @@
 \title{Optimizing TokenSmith for Consumer-GPU Hardware}
 
 \author{Shivam Singhal}
-\email{shivamsinghal16032003@gmail.com}
+\email{ssinghal88@gatech.edu}
 \affiliation{%
   \institution{Georgia Institute of Technology}
   \city{Atlanta}
   \state{GA}
   \country{USA}
 }
-\renewcommand{\shortauthors}{Singhal}
+\renewcommand{\shortauthors}{Singhal}   
 
 \begin{abstract}
 TokenSmith is a local-first RAG system for textbook question answering.
-The original implementation targets server-class GPUs. We re-target it
+The original implementation targets server-class GPUs. \shivam{Add a line saying that the current implementation is fully-functional but is ineffective for a new user because of the large time-to-first-token} We re-target it
 for consumer hardware (one GPU with at most 8\,GiB of memory, four CPU
 cores) by making four pipeline changes: parallel PDF extraction, a
 \texttt{pypdfium2} fast extraction path, a hardware-aware embedding
@@ -47,12 +49,12 @@ consumer GPU, FAISS}
 
 \section{Introduction}
 
-The original TokenSmith assumes a server with a large GPU. The goal of
+The original TokenSmith assumes a server with a large GPU. \shivam{Add more background establishing a baseline saying that the time-to-first-token is very large. Then explain the components of the initial pipeline that are very long and time-consuming and what is their contribution in the overall pipeline. Also add, how this makes the current structure of the project unusable for a new user wanting to test with a new textbook.} The goal of
 this project is to make it run on a student's laptop with no external
 API calls. We use the Silberschatz \emph{Database System Concepts}
 textbook as the corpus (2{,}195 pages, 2{,}664 chunks) and target a
 profile of one GPU with 8\,GiB of memory, four CPU cores, and 32\,GiB
-of host RAM.
+of host RAM \shivam{Do we really use the whole 32GiB, if not mention can we say that the most efficient implementation from our experiments exposes the need of this many resources, like 4GB host ram worst case scenario and 2gb gpu ram. Something like this would be really helpful because this will help put a cap on the requirement of resources through this implementation}.
 
 The pipeline has four stages: PDF extraction to markdown, indexing
 into FAISS and BM25, retrieval with a cross-encoder reranker, and
@@ -65,9 +67,9 @@ consumer-GPU proxy.
 
 The original extractor calls \texttt{docling} on the full PDF
 sequentially. Page-level layout analysis is the slow part and it is
-independent across pages, so we parallelize it.
+independent across pages, so we parallelize it. \shivam{explain the baseline in detail, saying that extracting a this many pages pdf takes this much time (in minutes or hours), and does not use the resources available on the full machine judiciously.}
 
-\texttt{split\_pdf} divides the master PDF into fixed-size page-range
+\shivam{Use the word map-reduce and explain what we tried to achieve, explain that we split the pdf into several segments and gave one to each thread running on one of the cores. We tried it on a server node with 64 cores, ans observed proportional drop in the timespan of extraction phase. Add the relevant image of a graph as well in log-log plot showing the time v/s cores of this map-reduce framework. You will find experiments for all sizes: 1, 2, 4, 8, 16, 32, 62}\texttt{split\_pdf} divides the master PDF into fixed-size page-range
 chunks using \texttt{pypdf}. \texttt{process\_pdf\_chunk} is the worker:
 it imports \texttt{docling}, converts one chunk, and serializes it page
 by page. A \texttt{ProcessPoolExecutor} runs the workers; results come
@@ -76,8 +78,9 @@ order. The \texttt{docling} import is deferred into the worker so that
 downstream callers (the indexer, pytest) do not pay its 100\,MB
 cold-load cost.
 
+
 \begin{table}[h]
-\caption{Phase 1: docling extraction on the 2{,}195-page textbook.}
+\caption{Phase 1: docling extraction on the 2{,}195-page textbook.\shivam{remove the RTX line, RTX has nothing to do with this phase, because we only used the cpus on that machine and not the gpus, this is just misleading. Only use the results that we ran on the big server with 62 cores for this part.}}
 \label{tab:phase1}
 \begin{tabular}{lrrr}
 \toprule
@@ -92,10 +95,10 @@ RTX 6000 (4) & 4 & 499           & 3.9$\times$ \\
 
 Speedup saturates near 32 workers on the server because the
 \texttt{pypdf} split phase becomes the Amdahl tail. On four cores we
-hit the core-count ceiling.
+hit the core-count ceiling. \shivam{Modify this to say that although with 62 servers we observe massive speedup, but it is still not practical as users won't have access to that many cores on a consumer-grade machines. The 4 worker case seems to be a good option but it still takes approx 8minutes, which is too large, then transition smoothly into pypdfium2 solution}
 
 \section{Phase 1.5: pypdfium2 Fast Path}
-
+\shivam{Can you not create a separate section for this and make subsections, rename the above case as map-reduce architecture for extraction, and this one as pypdfium2 Fast Path under the same section: Phase 1: ...}
 Even fully parallel, \texttt{docling} is overkill for plain-text
 textbooks. Phase 1.5 adds a second extraction backend without layout
 analysis. The new module \texttt{src/preprocessing/pypdfium\_extractor.py}
