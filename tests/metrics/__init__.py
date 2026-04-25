@@ -7,10 +7,11 @@ from tests.metrics.nli import NLIEntailmentMetric
 from tests.metrics.llm_judge import LLMJudgeMetric
 from tests.metrics.async_llm_judge import AsyncLLMJudgeMetric
 from tests.metrics.chunk_retrieval import ChunkRetrievalMetric
+from tests.metrics.bleu import BleuMetric
 
 __all__ = [
     'MetricBase',
-    'MetricRegistry', 
+    'MetricRegistry',
     'SimilarityScorer',
     'SemanticSimilarityMetric',
     'KeywordMatchMetric',
@@ -18,4 +19,5 @@ __all__ = [
     'LLMJudgeMetric',
     'AsyncLLMJudgeMetric',
     'ChunkRetrievalMetric',
+    'BleuMetric',
 ]

@@ -20,13 +20,15 @@ class SemanticSimilarityMetric(MetricBase):
         return 0.5
     
     def _initialize(self) -> bool:
-        """Initialize the sentence transformer model."""
+        # Pin the scoring model to CPU explicitly. Setting CUDA_VISIBLE_DEVICES=''
+        # in this module would also disable GPU for any sibling process (e.g. the
+        # generator) running in the same interpreter, which previously masked the
+        # 4B-embedder GPU path entirely.
         try:
-            os.environ['CUDA_VISIBLE_DEVICES'] = ''
             warnings.filterwarnings("ignore", message=".*CUDA capability.*")
             from sentence_transformers import util, SentenceTransformer
-            
-            self._model = SentenceTransformer('all-mpnet-base-v2')
+
+            self._model = SentenceTransformer('all-mpnet-base-v2', device='cpu')
             self._util = util
             return True
         except Exception as e:

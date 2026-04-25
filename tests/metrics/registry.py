@@ -10,20 +10,24 @@ class MetricRegistry:
         self._auto_register()
     
     def _auto_register(self):
-        """Automatically register all available metrics."""
+        """Register all metrics best-effort: failures (e.g. AsyncLLMJudge missing
+        Gemini key, NLI weights download blocked) skip the metric instead of
+        bringing the whole suite down."""
         from tests.metrics import (
             SemanticSimilarityMetric,
             KeywordMatchMetric,
             NLIEntailmentMetric,
             AsyncLLMJudgeMetric,
-            ChunkRetrievalMetric
+            ChunkRetrievalMetric,
+            BleuMetric,
         )
 
-        self.register(SemanticSimilarityMetric())
-        self.register(KeywordMatchMetric())
-        self.register(NLIEntailmentMetric())
-        self.register(AsyncLLMJudgeMetric())
-        self.register(ChunkRetrievalMetric())
+        for cls in (SemanticSimilarityMetric, KeywordMatchMetric, NLIEntailmentMetric,
+                    AsyncLLMJudgeMetric, ChunkRetrievalMetric, BleuMetric):
+            try:
+                self.register(cls())
+            except Exception as e:
+                print(f"Skipping {cls.__name__}: {type(e).__name__}: {e}")
 
     def register(self, metric: MetricBase):
         """Register a new metric."""
