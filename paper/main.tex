@@ -218,25 +218,47 @@ path with \texttt{batch\_size=32}; otherwise it uses a CPU
 across workers. This avoids a CPU pool fighting the GPU's allocator on
 mixed hosts.
 
-\shivam{Can you explain what do you mean by warm v/s cold starts, do you have metrics for each case with all warm v/s all cold starts? Can you add the mem size of RTX 6000, also what do you mean that the others were 64 core, they were not, and it doesn't even matter because anyways we'll be using just the gpu, there's no cpu parallelization task, so the number of cores that the gpu has do not matter, remove them. If you have a cold start metric for RTX that will be awesome. Also, what is the baseline,  how much time did it take earlier without our improvements v/s how much time does it take now, do you have that information available? If not reply in a comment, because I've time to run these baseline experiments. Also you can add another section talking about the improvements and this could be one of the improvements if you can't find the baseline values.}
+Phase 2 wall time depends heavily on what is already cached. By
+\emph{cold} we mean the first invocation after a fresh allocation,
+where the 4\,B \texttt{Qwen3-Embedding} GGUF has to be paged in from
+disk and the SQLite embedding cache is empty, so every chunk goes
+through the model. \emph{Warm} means a subsequent run in the same
+shell, where the GGUF stays in the OS page cache and the SQLite cache
+already has the chunks (Step 2 then becomes mostly a cache lookup at
+about 4\,ms per chunk). \emph{Super-warm} is a third run where every
+cache is hot.
 
 \begin{table}[h]
-\caption{Phase 2: Step 2 (embedding) wall time on 2{,}664 chunks.}
+\caption{Phase 2: Step 2 (embedding) wall time on 2{,}664 chunks.
+A100 and V100 numbers are cold (the original V100 session and the
+A100 baseline both ran on a fresh allocation). RTX 6000 numbers are
+warm and super-warm; we did not capture a clean cold RTX run.}
 \label{tab:phase2}
-\begin{tabular}{lrr}
+\begin{tabular}{llrr}
 \toprule
-host & wall (s) & peak VRAM \\
+GPU & run & wall (s) & peak VRAM \\
 \midrule
-A100 (64-core, 80\,GiB)             & 305 & not recorded \\
-V100 (64-core, 16\,GiB)             & 426 & 4.3\,GiB \\
-RTX 6000 (4-core), uncapped, warm   & \textbf{33.7} & 3.4\,GiB \\
-RTX 6000, \texttt{VRAM\_CAP\_GIB=8} & 33.7 & 3.4\,GiB \\
+A100 (80\,GiB)     & cold       & 305    & not recorded \\
+V100 (16\,GiB)     & cold       & 426    & 4.3\,GiB \\
+RTX 6000 (24\,GiB) & warm       & \textbf{33.7} & 3.4\,GiB \\
+RTX 6000 (24\,GiB) & super-warm & 4.5    & 3.4\,GiB \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The 8\,GiB cap is non-binding because \texttt{llama.cpp} is not bound
-by torch's per-process memory fraction.
+The 8\,GiB VRAM cap (set via \texttt{tools/cap\_vram.py}) is
+non-binding because \texttt{llama.cpp} is not bound by torch's
+per-process memory fraction; peak VRAM lands at 3.4\,GiB on the RTX
+6000 regardless of the cap.
+
+\shivam{Pre-Phase-2 baseline (the original \texttt{embedder.encode}
+path with \texttt{batch\_size=8} and no length-sorting / no GPU/CPU
+router) was not captured in this round, so the table reports absolute
+wall times rather than a speedup over the unoptimized path. If you
+re-run the original path on the same 2{,}664-chunk corpus on RTX 6000,
+swap that number in here for the speedup story; the rough expectation
+from the batch-size change alone is about 4x, and the router change
+matters more on mixed hosts than on this allocation.}
 
 \section{Phase 3: Pluggable Embedding Backends}
 
