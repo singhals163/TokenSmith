@@ -1,0 +1,25 @@
+Loaded 11 benchmarks with ideal_retrieved_chunks
+/storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/lib/python3.12/site-packages/transformers/utils/hub.py:106: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+<All keys matched successfully>
+
+================================================================================================
+id                             kw@5  kw@10  sim@5  sim@10    R@5    MRR   emb_ms
+------------------------------------------------------------------------------------------------
+aggregation_grouping           0.00   0.00  0.000   0.069   0.00  0.000      1.1
+acid_properties                0.00   0.00  0.214   0.353   0.00  0.000      1.9
+bptree                         0.00   0.00  0.333   0.359   0.00  0.000      1.3
+fd_normalization               0.00   0.00  0.284   0.284   0.00  0.000      1.2
+sql_isolation                  0.00   0.00  0.119   0.267   0.00  0.000      1.2
+primary_foreign_keys           0.00   0.00  0.083   0.149   0.00  0.040      1.3
+database_schema                0.00   0.14  0.095   0.159   0.00  0.026      1.5
+book_authors                   0.00   0.00  0.245   0.245   0.00  0.000      1.3
+aries_atomicity                0.00   0.00  0.152   0.240   0.00  0.000      1.3
+oltp_vs_analytics              0.00   0.00  0.181   0.181   0.00  0.000      1.3
+lossy_decomposition            0.00   0.29  0.235   0.320   0.00  0.000      1.3
+------------------------------------------------------------------------------------------------
+AGGREGATE                      0.00   0.04  0.177   0.239   0.00  0.006      1.3
+================================================================================================
+Wrote experiments/phase3/rtx6000/phase3_nomic_st_retrieval_eval.json
+9.54user 3.64system 0:14.73elapsed 89%CPU (0avgtext+0avgdata 1744704maxresident)k
+280inputs+56outputs (0major+569072minor)pagefaults 0swaps

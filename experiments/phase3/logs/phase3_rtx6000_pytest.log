@@ -1,0 +1,17 @@
+[qwen4b] launching: /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/bin/python -m pytest tests/test_benchmarks.py --config=/storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/phase3_qwen4b_pytest_config.yaml --index-prefix=phase3_qwen4b --model-path=models/qwen2.5-1.5b-instruct-q5_k_m.gguf --embed-model=models/Qwen3-Embedding-4B-Q4_K_M.gguf --output-mode=terminal --artifacts_dir=index/sections -s -q
+[qwen4b] pytest exit=-15 wall=557.5s log=/storage/scratch1/1/ssinghal88/TokenSmith/logs/phase3_pytest_qwen4b.log
+[nomic_st] launching: /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/bin/python -m pytest tests/test_benchmarks.py --config=/storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/phase3_nomic_st_pytest_config.yaml --index-prefix=phase3_nomic_st --model-path=models/qwen2.5-1.5b-instruct-q5_k_m.gguf --embed-model=nomic-ai/nomic-embed-text-v1.5 --output-mode=terminal --artifacts_dir=index/sections -s -q
+[nomic_st] pytest exit=0 wall=301.7s log=/storage/scratch1/1/ssinghal88/TokenSmith/logs/phase3_pytest_nomic_st.log
+[minilm] launching: /storage/home/hcoda1/1/ssinghal88/scratch/.conda/envs/tokensmith/bin/python -m pytest tests/test_benchmarks.py --config=/storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/phase3_minilm_pytest_config.yaml --index-prefix=phase3_minilm --model-path=models/qwen2.5-1.5b-instruct-q5_k_m.gguf --embed-model=sentence-transformers/all-MiniLM-L6-v2 --output-mode=terminal --artifacts_dir=index/sections -s -q
+[minilm] pytest exit=-15 wall=3.4s log=/storage/scratch1/1/ssinghal88/TokenSmith/logs/phase3_pytest_minilm.log
+
+================================================================================================
+variant      backend                  n  sem_sim   kw_sim    final   wall_s
+------------------------------------------------------------------------------------------------
+qwen4b       llama_cpp               11    0.757    0.317    0.592    557.5
+nomic_st     sentence_transformers   11    0.738    0.270    0.563    301.7
+minilm       sentence_transformers    0    0.000    0.000    0.000      3.4
+================================================================================================
+Wrote /storage/scratch1/1/ssinghal88/TokenSmith/experiments/phase3/pytest_all_summary.json
+83.37user 22.51system 14:26.32elapsed 12%CPU (0avgtext+0avgdata 5100744maxresident)k
+9707840inputs+1688outputs (42093major+3998728minor)pagefaults 0swaps

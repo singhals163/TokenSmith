@@ -1,0 +1,73 @@
+{
+  "index_prefix": "phase3_nomic_gpt4all_gpu",
+  "embed_backend": "gpt4all",
+  "embedding_model_path": "nomic-embed-text-v1.5.f16.gguf",
+  "num_chunks": 2664,
+  "embedding_dim": 768,
+  "resources": {
+    "peak_rss_mib": 1421.5,
+    "peak_vram_mib": 567.0,
+    "start_vram_mib": 1.0,
+    "delta_vram_mib": 566.0,
+    "samples": 29,
+    "gpu_available": true
+  },
+  "profile_stats": {
+    "Extraction: preprocess_extracted_section": {
+      "count": 774,
+      "total_time": 0.1121678352355957
+    },
+    "Extraction: extract_sections_from_markdown": {
+      "count": 1,
+      "total_time": 0.19737648963928223
+    },
+    "[Block] Extract Sections from Markdown": {
+      "count": 1,
+      "total_time": 0.19738531112670898
+    },
+    "Chunking: SectionRecursiveStrategy.chunk": {
+      "count": 775,
+      "total_time": 8.729462146759033
+    },
+    "Chunking: DocumentChunker.chunk": {
+      "count": 775,
+      "total_time": 8.730579137802124
+    },
+    "[Block] Step 1: Chunking & Metadata Parsing": {
+      "count": 1,
+      "total_time": 8.791792869567871
+    },
+    "Embedder [Main]: Load Model to Memory": {
+      "count": 1,
+      "total_time": 12.275821208953857
+    },
+    "Cache: Read SQLite": {
+      "count": 2664,
+      "total_time": 2.5409998893737793
+    },
+    "CachedEmbedder: Check Cache": {
+      "count": 1,
+      "total_time": 2.5500354766845703
+    },
+    "[Block] Step 2: Vector Embeddings Generation": {
+      "count": 1,
+      "total_time": 14.959493637084961
+    },
+    "[Block] Step 3: Build FAISS Index": {
+      "count": 1,
+      "total_time": 0.35996055603027344
+    },
+    "Helper: preprocess_for_bm25": {
+      "count": 2664,
+      "total_time": 0.43379878997802734
+    },
+    "[Block] Step 4: Build BM25 Index": {
+      "count": 1,
+      "total_time": 1.1570780277252197
+    },
+    "[Block] Step 5: Dump Index Artifacts": {
+      "count": 1,
+      "total_time": 0.333575963973999
+    }
+  }
+}
