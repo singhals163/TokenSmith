@@ -1,0 +1,26 @@
+Failed to load libllamamodel-mainline-cuda.so: dlopen: libcublas.so.11: cannot open shared object file: No such file or directory
+Failed to load libllamamodel-mainline-cuda-avxonly.so: dlopen: libcublas.so.11: cannot open shared object file: No such file or directory
+{
+  "prefix": "phase3_nomic_gpt4all",
+  "embed_backend": "gpt4all",
+  "embedding_model_path": "nomic-embed-text-v1.5.f16.gguf",
+  "sample_size": 100,
+  "total_corpus_chunks": 2664,
+  "batch_size": 32,
+  "model_load_s": 0.543,
+  "sample_encode_s": 270.712,
+  "per_chunk_s": 2.7071,
+  "projected_full_corpus_encode_s": 7211.8,
+  "per_batch_s_mean": 67.678,
+  "per_batch_s_min": 13.054,
+  "per_batch_s_max": 89.045,
+  "resources": {
+    "peak_rss_mib": 749.2,
+    "peak_vram_mib": 972.0,
+    "start_vram_mib": 0.0,
+    "delta_vram_mib": 972.0,
+    "samples": 518,
+    "gpu_available": true
+  }
+}
+Wrote experiments/phase3/phase3_nomic_gpt4all_throughput.json

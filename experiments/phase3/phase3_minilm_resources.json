@@ -1,0 +1,97 @@
+{
+  "index_prefix": "phase3_minilm",
+  "embed_backend": "sentence_transformers",
+  "embedding_model_path": "sentence-transformers/all-MiniLM-L6-v2",
+  "num_chunks": 2664,
+  "embedding_dim": 384,
+  "resources": {
+    "peak_rss_mib": 1125.1,
+    "peak_vram_mib": 688.0,
+    "start_vram_mib": 4.0,
+    "delta_vram_mib": 684.0,
+    "samples": 119,
+    "gpu_available": true
+  },
+  "profile_stats": {
+    "Extraction: preprocess_extracted_section": {
+      "count": 774,
+      "total_time": 0.1117706298828125
+    },
+    "Extraction: extract_sections_from_markdown": {
+      "count": 1,
+      "total_time": 0.2243788242340088
+    },
+    "[Block] Extract Sections from Markdown": {
+      "count": 1,
+      "total_time": 0.22438693046569824
+    },
+    "Chunking: SectionRecursiveStrategy.chunk": {
+      "count": 775,
+      "total_time": 0.03851914405822754
+    },
+    "Chunking: DocumentChunker.chunk": {
+      "count": 775,
+      "total_time": 0.039612770080566406
+    },
+    "[Block] Step 1: Chunking & Metadata Parsing": {
+      "count": 1,
+      "total_time": 0.10059499740600586
+    },
+    "Embedder [Main]: Load Model to Memory": {
+      "count": 1,
+      "total_time": 0.9191772937774658
+    },
+    "Cache: Read SQLite": {
+      "count": 2664,
+      "total_time": 2.5984880924224854
+    },
+    "CachedEmbedder: Check Cache": {
+      "count": 1,
+      "total_time": 2.607712507247925
+    },
+    "Embedder [Main]: Prepare and Sort Chunks": {
+      "count": 1,
+      "total_time": 0.0010020732879638672
+    },
+    "Embedder [Main]: sentence-transformers compute": {
+      "count": 1,
+      "total_time": 6.758937358856201
+    },
+    "Embedder [Main]: Sequential Batch Encoding": {
+      "count": 1,
+      "total_time": 6.758944272994995
+    },
+    "Embedder [Main]: Restore Order": {
+      "count": 1,
+      "total_time": 0.00244903564453125
+    },
+    "Cache: Write SQLite": {
+      "count": 2664,
+      "total_time": 51.39552426338196
+    },
+    "CachedEmbedder: Write Missing to Cache": {
+      "count": 1,
+      "total_time": 51.415252447128296
+    },
+    "[Block] Step 2: Vector Embeddings Generation": {
+      "count": 1,
+      "total_time": 62.075413942337036
+    },
+    "[Block] Step 3: Build FAISS Index": {
+      "count": 1,
+      "total_time": 0.0049970149993896484
+    },
+    "Helper: preprocess_for_bm25": {
+      "count": 2664,
+      "total_time": 0.43213391304016113
+    },
+    "[Block] Step 4: Build BM25 Index": {
+      "count": 1,
+      "total_time": 0.6252639293670654
+    },
+    "[Block] Step 5: Dump Index Artifacts": {
+      "count": 1,
+      "total_time": 0.011926412582397461
+    }
+  }
+}
