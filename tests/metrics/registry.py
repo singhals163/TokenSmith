@@ -16,14 +16,19 @@ class MetricRegistry:
             KeywordMatchMetric,
             NLIEntailmentMetric,
             AsyncLLMJudgeMetric,
-            ChunkRetrievalMetric
+            ChunkRetrievalMetric,
+            BleuMetric,
         )
 
-        self.register(SemanticSimilarityMetric())
-        self.register(KeywordMatchMetric())
-        self.register(NLIEntailmentMetric())
-        self.register(AsyncLLMJudgeMetric())
-        self.register(ChunkRetrievalMetric())
+        # Metrics that need network/API credentials (AsyncLLMJudge) or large
+        # model downloads (NLI DeBERTa) are best-effort so the suite still
+        # runs in restricted environments.
+        for cls in (SemanticSimilarityMetric, KeywordMatchMetric, NLIEntailmentMetric,
+                    AsyncLLMJudgeMetric, ChunkRetrievalMetric, BleuMetric):
+            try:
+                self.register(cls())
+            except Exception as e:
+                print(f"Skipping {cls.__name__}: {type(e).__name__}: {e}")
 
     def register(self, metric: MetricBase):
         """Register a new metric."""

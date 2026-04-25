@@ -33,3 +33,7 @@ dependencies:
     - pydantic
     - docling
     - markdown
+    - pypdf
+    - pypdfium2
+    - gpt4all
+    - psutil

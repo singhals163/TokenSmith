@@ -74,6 +74,7 @@ def run_index_mode(args: argparse.Namespace, cfg: RAGConfig):
         index_prefix=args.index_prefix,
         use_multiprocessing=args.multiproc_indexing,
         use_headings=args.embed_with_headings,
+        embed_backend=cfg.embed_backend,
     )
 
 def use_indexed_chunks(question: str, chunks: list) -> list:

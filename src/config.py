@@ -21,6 +21,7 @@ class RAGConfig:
     top_k: int = 10
     num_candidates: int = 60
     embed_model: str = "models/Qwen3-Embedding-4B-Q5_K_M.gguf"
+    embed_backend: str = "llama_cpp"  # "llama_cpp" | "gpt4all" | "sentence_transformers"
     ensemble_method: str = "rrf"
     rrf_k: int  = 60
     ranker_weights: Dict[str, float] = field(
@@ -53,9 +54,6 @@ class RAGConfig:
     use_indexed_chunks: bool = False
     extracted_index_path: os.PathLike = "data/extracted_index.json"
     page_to_chunk_map_path: os.PathLike = "index/sections/textbook_index_page_to_chunk_map.json"
-
-    # user feedback modeling
-    enable_topic_extraction: bool = False
 
     # ---------- factory + validation ----------
     @classmethod
