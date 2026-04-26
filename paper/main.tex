@@ -116,6 +116,10 @@ into a \emph{cold ingestion} path that runs once per textbook and a
   io/.style={font=\small\itshape, align=center},
   arr/.style={->, very thick}
 ]
+  % --- Cold ingestion row label (placed clearly above the boxes) ---
+  \node[font=\small\bfseries, anchor=south west]
+    at (-0.5, 1.2) {Cold ingestion (once per textbook)};
+
   % --- Cold ingestion row ---
   \node[io]    (pdf) at (0, 0)     {PDF};
   \node[stage] (ext) at (2.4, 0)   {Extract\\\footnotesize PDF $\to$ Markdown};
@@ -130,20 +134,22 @@ into a \emph{cold ingestion} path that runs once per textbook and a
   \draw[arr] (emb) -- (idx);
   \draw[arr] (idx) -- (db);
 
-  \node[font=\small\bfseries, anchor=south west]
-    at ($(pdf.north west)+(-0.1,0.4)$) {Cold ingestion (once per textbook)};
   \node[font=\scriptsize\bfseries, color=blue!60!black,
         anchor=north] at (ext.south) {Phase 1};
   \node[font=\scriptsize\bfseries, color=blue!60!black,
         anchor=north] at (emb.south) {Phase 2 + 3};
 
+  % --- Per-query row label (placed clearly above its boxes) ---
+  \node[font=\small\bfseries, anchor=south west]
+    at (-0.5, -2.2) {Per query (each question)};
+
   % --- Per-query row ---
-  \node[io]    (q)   at (0, -3.4)  {Question};
-  \node[stage] (qe)  at (2.4, -3.4){Embed query};
-  \node[stage] (ret) at (5.8, -3.4){Retrieve\\\footnotesize FAISS + BM25\\\footnotesize top 50};
-  \node[stage] (rer) at (9.2, -3.4){Rerank\\\footnotesize cross-encoder\\\footnotesize top 5};
-  \node[stage] (gen) at (12.6, -3.4){Generate\\\footnotesize Qwen2.5-1.5B};
-  \node[io]    (a)   at (15.5, -3.4){Answer};
+  \node[io]    (q)   at (0, -3.6)  {Question};
+  \node[stage] (qe)  at (2.4, -3.6){Embed query};
+  \node[stage] (ret) at (5.8, -3.6){Retrieve\\\footnotesize FAISS + BM25\\\footnotesize top 50};
+  \node[stage] (rer) at (9.2, -3.6){Rerank\\\footnotesize cross-encoder\\\footnotesize top 5};
+  \node[stage] (gen) at (12.6, -3.6){Generate\\\footnotesize Qwen2.5-1.5B};
+  \node[io]    (a)   at (15.5, -3.6){Answer};
 
   \draw[arr] (q)   -- (qe);
   \draw[arr] (qe)  -- (ret);
@@ -151,8 +157,6 @@ into a \emph{cold ingestion} path that runs once per textbook and a
   \draw[arr] (rer) -- (gen);
   \draw[arr] (gen) -- (a);
 
-  \node[font=\small\bfseries, anchor=south west]
-    at ($(q.north west)+(-0.1,0.4)$) {Per query (each question)};
   \node[font=\scriptsize\bfseries, color=blue!60!black,
         anchor=north] at (qe.south) {Phase 3 (backend)};
 \end{tikzpicture}
@@ -164,8 +168,7 @@ the 50 nearest chunks, reranks them with a cross-encoder, prompts the
 per-query path is unchanged in cost (about 3.5\,s end to end on the
 consumer GPU). Phase 3's pluggable embedder also reaches the per-query
 \textsc{embed} stage because the same backend that built the index is
-used to embed the question. \shivam{``Cold ingestion (once per textbook)"
-text in the very beginning is overlapping with the first few boxes of extract and chunk phases, fix it.}}
+used to embed the question.}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -211,7 +214,7 @@ resource numbers.
 
 \begin{description}
 \item[Semantic similarity (sem).] Cosine similarity between the
-  \\\texttt{all-mpnet-base-v2} embedding of the generated answer and that
+  \texttt{all-mpnet-base-v2} embedding of the generated answer and that
   of the reference answer. Range $[0, 1]$, higher is better. Captures
   whether the answer means the same thing as the reference, even when
   the wording differs.
@@ -544,7 +547,33 @@ cap only reserves VRAM and does not change numerics. The Vulkan
 footprint of the four (2.1\,GiB) and provides a CUDA-free option for
 non-NVIDIA silicon.
 
-\shivam{Can you add relevant links to the relevant code here? Like the repo link (my personal fork), and various branches and what is present on those branches, only mention the ones that are relevant that we setup earlier in the day for final submission?}
+%% ------------------------------------------------------------
+\section{Code and Artifacts}
+
+The full code is available at
+\url{https://github.com/singhals163/TokenSmith}. Each optimization
+lives on its own branch so the diff against \texttt{main} is small
+enough to read independently. The branches relevant to this
+submission are:
+
+\begin{description}
+\item[\texttt{feat/parallel-extraction}] Phase 1, the docling
+  map-reduce extractor.
+\item[\texttt{feat/pypdfium-extractor}] Phase 1.5, the
+  \texttt{pypdfium2} fast extraction path.
+\item[\texttt{feat/embedder-router}] Phase 2, the GPU/CPU routing and
+  length-sorted batches.
+\item[\texttt{feat/pluggable-embedders}] Phase 3, the pluggable
+  embedder backend (\texttt{llama.cpp} / GPT4All /
+  \texttt{sentence-transformers}) plus the BLEU metric and the
+  GPU-pollution fix.
+\item[\texttt{tools}] Helper code used to gather the numbers in this
+  paper (profiler, VRAM cap helper, per-variant index and pytest
+  drivers).
+\item[\texttt{experiments}] All four feature branches integrated, the
+  per-experiment result artifacts under \texttt{experiments/}, and a
+  markdown version of this writeup (\texttt{REPORT.md}).
+\end{description}
 
 %% ------------------------------------------------------------
 \section{Conclusion}
