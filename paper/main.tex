@@ -214,7 +214,7 @@ resource numbers.
 
 \begin{description}
 \item[Semantic similarity (sem).] Cosine similarity between the
-  \texttt{all-mpnet-base-v2} embedding of the generated answer and that
+  \\\texttt{all-mpnet-base-v2} embedding of the generated answer and that
   of the reference answer. Range $[0, 1]$, higher is better. Captures
   whether the answer means the same thing as the reference, even when
   the wording differs.
@@ -399,14 +399,14 @@ non-binding because the GGUF embedder is not bound by torch's
 per-process memory fraction; peak VRAM lands at 3.4\,GiB on the RTX
 6000 regardless of the cap.
 
-\shivam{Pre-Phase-2 baseline (the original embedder path with
-\texttt{batch\_size=8} and no length-sorting / no GPU/CPU router) was
-not captured in this round, so the table reports absolute wall times
-rather than a speedup over the unoptimized path. If you re-run the
-original path on the same 2{,}664-chunk corpus on RTX 6000, swap that
-number in here for the speedup story; the rough expectation from the
-batch-size change alone is about 4x, and the router change matters
-more on mixed hosts than on this allocation.}
+% \shivam{Pre-Phase-2 baseline (the original embedder path with
+% \texttt{batch\_size=8} and no length-sorting / no GPU/CPU router) was
+% % not captured in this round, so the table reports absolute wall times
+% rather than a speedup over the unoptimized path. If you re-run the
+% original path on the same 2{,}664-chunk corpus on RTX 6000, swap that
+% number in here for the speedup story; the rough expectation from the
+% batch-size change alone is about 4x, and the router change matters
+% more on mixed hosts than on this allocation.}
 
 %% ------------------------------------------------------------
 \section{Phase 3: Pluggable Embedding Backends}
@@ -414,7 +414,7 @@ more on mixed hosts than on this allocation.}
 \subsection{The Pluggable Backend}
 
 A 4\,B embedder is heavy. Phase 3 makes the embedder swappable so we
-can compare lighter alternatives at the same call site. The indexer
+can compare lighter alternatives across the same hardware. The indexer
 talks to a single \emph{backend} interface and the user chooses which
 backend to use through one keyword argument:
 
@@ -488,7 +488,7 @@ verbatim. The GPT4All variant is the weakest of the four on every
 metric (final 0.558), almost entirely because of one benchmark
 (\texttt{book\_authors}) where its retrieval pulls a near-empty chunk
 and the generator returns a malformed answer that scores 0.07 on
-final.
+final. \shivam{Verify this}
 
 A 23\,M model beating a 4\,B model on a final-score weighted toward
 semantic similarity looks surprising. The reason is the cross-encoder
@@ -506,7 +506,7 @@ questions.
 The headline question is whether the system runs end to end on a
 consumer GPU at the 8\,GiB cap. We answer it on the RTX 6000 with the
 VRAM cap helper enabling
-\texttt{torch.cuda.set\_per\_process\_memory\_fraction(8/24)} for any
+\texttt{torch.cuda.set\_per\_process\_memory}\\\texttt{\_fraction(8/24)} for any
 torch process in the run. The GGUF embedder is not bound by torch's
 allocator, so for that variant we report natural peak VRAM and confirm
 it stays under 8\,GiB on its own.
@@ -526,7 +526,7 @@ invocation after the index already exists.
 \begin{table}[h]
 \caption{Phase 3, RTX 6000, \texttt{VRAM\_CAP\_GIB=8}. Wall time is
 the full 11-question pytest loop per variant. Final score uses the
-metrics defined in Section~\ref{sec:metrics}.}
+metrics defined in Section~\ref{sec:metrics}. \shivam{Why are the final scores in this table different from the scores in table 4? Which is the correct result? fix it}
 \label{tab:rtx-capped}
 \begin{tabular}{lrrr}
 \toprule
