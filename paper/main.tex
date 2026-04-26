@@ -164,7 +164,8 @@ the 50 nearest chunks, reranks them with a cross-encoder, prompts the
 per-query path is unchanged in cost (about 3.5\,s end to end on the
 consumer GPU). Phase 3's pluggable embedder also reaches the per-query
 \textsc{embed} stage because the same backend that built the index is
-used to embed the question.}
+used to embed the question. \shivam{``Cold ingestion (once per textbook)"
+text in the very beginning is overlapping with the first few boxes of extract and chunk phases, fix it.}}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -204,13 +205,13 @@ Stage              & Phase     & Baseline       & Optimized \\
 \label{sec:metrics}
 
 We evaluate every change against the same 11-question benchmark suite
-that ships with the project. Each benchmark has a hand-written
+present in the project's repository. Each benchmark has a hand-written
 reference answer. We report four quality numbers per variant and two
 resource numbers.
 
 \begin{description}
 \item[Semantic similarity (sem).] Cosine similarity between the
-  \texttt{all-mpnet-base-v2} embedding of the generated answer and that
+  \\\texttt{all-mpnet-base-v2} embedding of the generated answer and that
   of the reference answer. Range $[0, 1]$, higher is better. Captures
   whether the answer means the same thing as the reference, even when
   the wording differs.
@@ -429,27 +430,27 @@ The four variants we compare in this paper are \texttt{qwen4b}
 (llama.cpp, 4\,B), \texttt{nomic\_st} (HF, 137\,M), \texttt{minilm}
 (HF, 23\,M), and \texttt{nomic\_gpt4all} (GPT4All, 137\,M).
 
-\subsection{Two Adjacent Fixes}
+% \subsection{Two Adjacent Fixes}
 
-\paragraph{BLEU.}
-The original metric suite had semantic and keyword similarity but no
-n-gram surface-overlap signal, so two answers that mean the same
-thing at different paraphrase strengths could not be distinguished. We
-add a sentence-level BLEU-4 metric (NIST method-1 smoothing) so the
-final-score weighting in Section~\ref{sec:metrics} can include surface
-overlap.
+% \paragraph{BLEU.}
+% The original metric suite had semantic and keyword similarity but no
+% n-gram surface-overlap signal, so two answers that mean the same
+% thing at different paraphrase strengths could not be distinguished. We
+% add a sentence-level BLEU-4 metric (NIST method-1 smoothing) so the
+% final-score weighting in Section~\ref{sec:metrics} can include surface
+% overlap.
 
-\paragraph{The pollution bug.}
-The semantic-similarity scorer (an MPNet model used to compare each
-generated answer to the reference) was forcing CPU mode for itself by
-clearing the CUDA-visibility environment variable at import time. That
-clearing was process-wide, so it also disabled the GPU for everything
-else started later in the same Python process, including the answer
-generator. End-to-end test wall on a V100 dropped from about 700\,s to
-about 45\,s once we left CUDA visible to the rest of the suite and
-pinned only the scoring model to CPU. The bug was easy to miss because
-the suite kept passing on quality; it just ran 15$\times$ slower than
-it should have.
+% \paragraph{The pollution bug.}
+% The semantic-similarity scorer (an MPNet model used to compare each
+% generated answer to the reference) was forcing CPU mode for itself by
+% clearing the CUDA-visibility environment variable at import time. That
+% clearing was process-wide, so it also disabled the GPU for everything
+% else started later in the same Python process, including the answer
+% generator. End-to-end test wall on a V100 dropped from about 700\,s to
+% about 45\,s once we left CUDA visible to the rest of the suite and
+% pinned only the scoring model to CPU. The bug was easy to miss because
+% the suite kept passing on quality; it just ran 15$\times$ slower than
+% it should have.
 
 \subsection{Quality Comparison on V100}
 
@@ -531,7 +532,7 @@ variant & wall (s) & peak VRAM (MiB) & final \\
 minilm                       & \textbf{40.3} & 2{,}214 & 0.578 \\
 nomic\_st                    & 36.2 & 2{,}706 & 0.563 \\
 qwen4b                       & 37.1 & 5{,}392 & 0.592 \\
-nomic\_gpt4all\_gpu (kompute) & 36.2 & \textbf{2{,}124} & 0.558 \\
+nomic\_gpt4all\_gpu & 36.2 & \textbf{2{,}124} & 0.558 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -542,6 +543,8 @@ cap only reserves VRAM and does not change numerics. The Vulkan
 (kompute) path used by the GPT4All backend has the smallest VRAM
 footprint of the four (2.1\,GiB) and provides a CUDA-free option for
 non-NVIDIA silicon.
+
+\shivam{Can you add relevant links to the relevant code here? Like the repo link (my personal fork), and various branches and what is present on those branches, only mention the ones that are relevant that we setup earlier in the day for final submission?}
 
 %% ------------------------------------------------------------
 \section{Conclusion}
