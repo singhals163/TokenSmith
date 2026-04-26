@@ -221,7 +221,7 @@ mixed hosts.
 Phase 2 wall time depends heavily on what is already cached. By
 \emph{cold} we mean the first invocation after a fresh allocation,
 where the 4\,B \texttt{Qwen3-Embedding} GGUF has to be paged in from
-disk and the SQLite embedding cache is empty, so every chunk goes
+disk and the embedding cache is empty, so every chunk goes
 through the model. \emph{Warm} means a subsequent run in the same
 shell, where the GGUF stays in the OS page cache and the SQLite cache
 already has the chunks (Step 2 then becomes mostly a cache lookup at
@@ -266,14 +266,12 @@ A 4\,B embedder is heavy. Phase 3 makes the embedder swappable so we
 can compare lighter alternatives at a fixed call site.
 
 \texttt{src/embedder.py} introduces a \texttt{BaseEmbedder} ABC with
-three implementations: \texttt{LlamaCppEmbedder} for GGUF models,
-\texttt{GPT4AllEmbedder} for Nomic GGUFs (with \texttt{device=kompute}
-for Vulkan or \texttt{device=cuda} for NVIDIA), and
-\texttt{HFSentenceTransformerEmbedder} for HuggingFace
-\texttt{sentence-transformers}. A factory
+three implementations: LlamaCppEmbedder for GGUF models,
+GPT4AllEmbedder for Nomic GGUFs, and
+HFSentenceTransformerEmbedder for HuggingFace
+sentence-transformers. A factory
 \texttt{make\_embedder(model\_path, backend)} returns the right
-implementation and a back-compat alias keeps existing import sites
-working.
+implementation and a back-compat \shivam{What is back-compat?} alias keeps existing import sites working. \shivam{What do you even mean by this sentence, remove it if it is not necessary for the report.}
 
 Two adjacent fixes ship in this phase. We add a sentence-level BLEU-4
 metric with NIST method-1 smoothing under \texttt{tests/metrics/bleu.py}.
@@ -281,7 +279,7 @@ We also fix a pollution bug in \texttt{tests/metrics/semantic.py}.
 The original code set \texttt{CUDA\_VISIBLE\_DEVICES=''} at module
 import, which silently disabled the GPU for any sibling process in the
 same interpreter. We pin the scoring model to \texttt{device='cpu'}
-instead.
+instead. \shivam{What is the significance of this step, in general and why should it be present in the report?}
 End-to-end pytest wall on a typical V100 run drops from $\sim$700\,s to
 $\sim$45\,s.
 
@@ -303,7 +301,7 @@ nomic\_gpt4all      & 137\,M & 0.716 & 0.295 & 0.026 & 0.558 \\
 The 23\,M MiniLM variant slightly beats the 4\,B baseline on final
 score. Its retrieval-only quality is weaker, but the cross-encoder
 reranker recovers the gap as long as the right chunk is somewhere in
-the top-50 FAISS neighbours.
+the top-50 FAISS neighbours. \shivam{Can you be more elaborative and descriptive in describing the metric that we're using to measure the quality/accuracy of the output here and also which model is performing better on which metric?}
 
 \section{Consumer-GPU Evaluation}
 
@@ -333,7 +331,9 @@ The largest peak is 5.4\,GiB (the 4\,B baseline). Every other variant
 uses less than 3\,GiB. Final scores match the uncapped run because the
 cap only reserves VRAM and does not change numerics. The Vulkan path
 used by GPT4All has the smallest footprint and provides a CUDA-free
-option for non-NVIDIA silicon.
+option for non-NVIDIA silicon. \shivam{Be more descriptive, what is the wall clock time here? Is this for running the final benchmarks? Who made it and where is it present? Or does it include embedding generation time as well? Explain clearly}
+
+\shivam{Overall, I think the following are missing/not specified clearly. 1. The architecture of the project. I'm unable to understand the whole architecture of the project and which step does what and which phase is improving which step. I'd suggest you to make a diagram (maybe a separate png image, and then include it here showing the architecture of tokensmith). You can label there, which step takes how much time(baseline), and which are preprocessing steps v/s which steps take place each time and where are we making the improvements. You can also add a small text about what is the output of each of these steps, like a middle file that is generated and is fed into the next step, etc, be as descriptive and elaborate as possible and explain everything. 2. You've not defined metrics on which you're measuring the success of the changes properly. It'll be beneficial if you define them in the introduction or somewhere else that you see fit, and then while stating the success of a phase by measuring against certain metric, you also clearly state what metric is used there. 3. I don't care about the implementation level nitty-gritties in this report, so it's better to not add things like where a file is saved etc. Only why we do it, how we do it and what are the results obtained is what that matters. If you can fix this asap, the report would become really good.}
 
 \section{Conclusion}
 
