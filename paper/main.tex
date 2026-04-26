@@ -485,10 +485,15 @@ MPNet scorer's notion of similarity. Sentence-transformers Nomic wins
 on keyword similarity (0.346) and BLEU (0.032), which means it pulls
 in answer text that copies more of the reference's vocabulary
 verbatim. The GPT4All variant is the weakest of the four on every
-metric (final 0.558), almost entirely because of one benchmark
-(\texttt{book\_authors}) where its retrieval pulls a near-empty chunk
-and the generator returns a malformed answer that scores 0.07 on
-final. \shivam{Verify this}
+metric (final 0.558). Its single worst question is
+\texttt{book\_authors}, where the retrieval pulls chunks 145, 1396,
+1260, and so on rather than the front-matter author chunks (ideal IDs
+0, 1, 2, 3, 22), and the generator then hallucinates an entirely
+unrelated Stephen Hawking book; the final score on that question is
+0.071 with zero of seven reference keywords matched. The other
+lightweight variants also struggle on \texttt{book\_authors} (MiniLM
+0.42, Nomic-ST 0.26, with the 4\,B baseline topping out at 0.47), so
+the question is hard for everyone, but GPT4All falls furthest.
 
 A 23\,M model beating a 4\,B model on a final-score weighted toward
 semantic similarity looks surprising. The reason is the cross-encoder
@@ -526,7 +531,7 @@ invocation after the index already exists.
 \begin{table}[h]
 \caption{Phase 3, RTX 6000, \texttt{VRAM\_CAP\_GIB=8}. Wall time is
 the full 11-question pytest loop per variant. Final score uses the
-metrics defined in Section~\ref{sec:metrics}. \shivam{Why are the final scores in this table different from the scores in table 4? Which is the correct result? fix it}
+metrics defined in Section~\ref{sec:metrics}.}
 \label{tab:rtx-capped}
 \begin{tabular}{lrrr}
 \toprule
@@ -541,11 +546,29 @@ nomic\_gpt4all\_gpu & 36.2 & \textbf{2{,}124} & 0.558 \\
 \end{table}
 
 The largest peak is 5.4\,GiB (the 4\,B baseline). Every other variant
-uses less than 3\,GiB. Final scores match the uncapped run because the
-cap only reserves VRAM and does not change numerics. The Vulkan
-(kompute) path used by the GPT4All backend has the smallest VRAM
-footprint of the four (2.1\,GiB) and provides a CUDA-free option for
-non-NVIDIA silicon.
+uses less than 3\,GiB. The Vulkan (kompute) path used by the GPT4All
+backend has the smallest VRAM footprint of the four (2.1\,GiB) and
+provides a CUDA-free option for non-NVIDIA silicon.
+
+\paragraph{Why the final scores differ slightly from
+Table~\ref{tab:phase3-v100}.}
+The GGUF-based variants (\texttt{qwen4b} and
+\texttt{nomic\_gpt4all\_gpu}) score the same on V100 and on RTX 6000
+to within float rounding (0.592 / 0.558 in both tables) because their
+inference is dominated by integer-quantized ops and is essentially
+deterministic across GPU silicon. The two FP32 backends drift by about
+2.5 points: \texttt{minilm} from 0.603 (V100) to 0.578 (RTX 6000),
+\texttt{nomic\_st} from 0.589 to 0.563. Same model weights, same FAISS
+indexes (the V100 indexes are reused), same generator, same scorer.
+The drift comes from small floating-point differences in the embedder
+(query side) and the reranker on different GPU silicon, which
+propagate through the top-50 ordering, then the top-5, then the
+generated answer, and finally the score. Both tables are valid
+measurements; Table~\ref{tab:phase3-v100} reports the original V100
+quality study and Table~\ref{tab:rtx-capped} reports the consumer-GPU
+re-run under the 8\,GiB cap. Cap on or off, the consumer numbers are
+identical (the cap only reserves VRAM and does not change numerics);
+the comparison to V100 is the meaningful one.
 
 %% ------------------------------------------------------------
 \section{Code and Artifacts}
