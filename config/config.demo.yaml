@@ -1,0 +1,26 @@
+# Demo configuration: most efficient TokenSmith pipeline.
+# Pairs with demo.sh and DEMO.md for a live walk-through.
+#
+#   PDF extraction : pypdfium2 (run separately by demo.sh)
+#   Embedder       : MiniLM-L6-v2 (23M) via HuggingFace sentence-transformers
+#   Generator      : Qwen2.5-1.5B-Instruct GGUF on llama.cpp
+#
+# Expected end-to-end cold wall on a 4-core / 8 GiB consumer GPU is around
+# 45 seconds (extract + index + first answer).
+embed_model: "sentence-transformers/all-MiniLM-L6-v2"
+embed_backend: "sentence_transformers"
+gen_model: "models/qwen2.5-1.5b-instruct-q5_k_m.gguf"
+
+top_k: 10
+num_candidates: 50
+ensemble_method: "rrf"
+ranker_weights: {"faiss": 1, "bm25": 0, "index_keywords": 0}
+rrf_k: 60
+
+max_gen_tokens: 400
+chunk_mode: "recursive_sections"
+chunk_size: 2000
+chunk_overlap: 200
+
+rerank_mode: "cross_encoder"
+rerank_top_k: 5
