@@ -293,7 +293,7 @@ speedup   & 1.0$\times$ & 2.3$\times$ & 4.8$\times$ & 4.3$\times$ & 8.7$\times$ 
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\linewidth]{figs/extraction_scaling.png}
+\includegraphics[width=0.8\linewidth]{figs/extraction_scaling.png}
 \caption{Total extraction wall time vs.\ worker count on the 64-core
 server (log y-axis). The 8-worker point is a small regression because
 the chosen chunk size oversubscribes per-core caches at that worker
@@ -486,9 +486,7 @@ on keyword similarity (0.346) and BLEU (0.032), which means it pulls
 in answer text that copies more of the reference's vocabulary
 verbatim. The GPT4All variant is the weakest of the four on every
 metric (final 0.558). Its single worst question is
-\texttt{book\_authors}, where the retrieval pulls chunks 145, 1396,
-1260, and so on rather than the front-matter author chunks (ideal IDs
-0, 1, 2, 3, 22), and the generator then hallucinates an entirely
+\texttt{book\_authors}, where the retrieval pulls incorrect chunks and the generator then hallucinates an entirely
 unrelated Stephen Hawking book; the final score on that question is
 0.071 with zero of seven reference keywords matched. The other
 lightweight variants also struggle on \texttt{book\_authors} (MiniLM
@@ -532,14 +530,14 @@ invocation after the index already exists.
 \caption{Phase 3, RTX 6000, \texttt{VRAM\_CAP\_GIB=8}. Wall time is
 the full 11-question pytest loop per variant. Final score uses the
 metrics defined in Section~\ref{sec:metrics}.}
-\label{tab:rtx-capped}
+\label{tab:rtx-capped}\
 \begin{tabular}{lrrr}
 \toprule
 variant & wall (s) & peak VRAM (MiB) & final \\
 \midrule
-minilm                       & \textbf{40.3} & 2{,}214 & 0.578 \\
-nomic\_st                    & 36.2 & 2{,}706 & 0.563 \\
 qwen4b                       & 37.1 & 5{,}392 & 0.592 \\
+nomic\_st                    & 36.2 & 2{,}706 & 0.563 \\
+minilm                       & \textbf{40.3} & 2{,}214 & 0.578 \\
 nomic\_gpt4all\_gpu & 36.2 & \textbf{2{,}124} & 0.558 \\
 \bottomrule
 \end{tabular}
@@ -554,21 +552,12 @@ provides a CUDA-free option for non-NVIDIA silicon.
 Table~\ref{tab:phase3-v100}.}
 The GGUF-based variants (\texttt{qwen4b} and
 \texttt{nomic\_gpt4all\_gpu}) score the same on V100 and on RTX 6000
-to within float rounding (0.592 / 0.558 in both tables) because their
-inference is dominated by integer-quantized ops and is essentially
-deterministic across GPU silicon. The two FP32 backends drift by about
-2.5 points: \texttt{minilm} from 0.603 (V100) to 0.578 (RTX 6000),
-\texttt{nomic\_st} from 0.589 to 0.563. Same model weights, same FAISS
-indexes (the V100 indexes are reused), same generator, same scorer.
+to within float rounding because their
+inference is dominated by integer-quantized ops and is deterministic across GPU silicon. The two FP32 backends drift by about
+0.025 points: \texttt{minilm} from 0.603 (V100) to 0.578 (RTX 6000),
+\texttt{nomic\_st} from 0.589 to 0.563. 
 The drift comes from small floating-point differences in the embedder
-(query side) and the reranker on different GPU silicon, which
-propagate through the top-50 ordering, then the top-5, then the
-generated answer, and finally the score. Both tables are valid
-measurements; Table~\ref{tab:phase3-v100} reports the original V100
-quality study and Table~\ref{tab:rtx-capped} reports the consumer-GPU
-re-run under the 8\,GiB cap. Cap on or off, the consumer numbers are
-identical (the cap only reserves VRAM and does not change numerics);
-the comparison to V100 is the meaningful one.
+and the reranker on different GPU silicon.
 
 %% ------------------------------------------------------------
 \section{Code and Artifacts}
