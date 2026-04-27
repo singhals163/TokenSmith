@@ -1,0 +1,213 @@
+%%% TokenSmith 3-minute class presentation
+%%% Compile with pdflatex (Beamer). Aspect ratio 16:9.
+
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta}
+\usepackage{booktabs}
+
+\title[TokenSmith on Consumer GPUs]{Optimizing TokenSmith for Consumer-GPU Hardware}
+\subtitle{A Local-First RAG Pipeline}
+\author{Shivam Singhal}
+\institute{Georgia Tech}
+\date{CS 6423, Spring 2026}
+
+\begin{document}
+
+%% ----------------------------------------------------------
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}{The problem}
+TokenSmith is a local-first RAG system for textbook question answering.
+No external API calls, everything runs on the student's machine.
+
+\bigskip
+
+The original system works, but the cold path is brutal:
+\begin{itemize}
+  \item Sequential PDF extraction: \textbf{9{,}650\,s} (about 2h 40m)
+  \item 4\,B embedder build: another 5 to 7 minutes on a server GPU
+  \item First answer: a few seconds, after all of that
+\end{itemize}
+
+\bigskip
+
+\begin{block}{}
+\centering
+\textbf{Cold time-to-first-token on a laptop: $\sim$\,2h 45m.}\\
+Nobody waits that long for one textbook.
+\end{block}
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}{The pipeline and where we attacked it}
+\centering
+\begin{tikzpicture}[
+  > = {Stealth[length=2mm]},
+  thick,
+  font=\scriptsize,
+  stage/.style={draw, rounded corners=2pt, fill=blue!10,
+                minimum width=14mm, minimum height=7mm, align=center},
+  io/.style={font=\footnotesize\itshape},
+  arr/.style={->, thick}
+]
+  % Cold ingestion row
+  \node[io]    (pdf) at (0, 0)   {PDF};
+  \node[stage] (ext) at (1.6, 0) {Extract};
+  \node[stage] (chk) at (3.6, 0) {Chunk};
+  \node[stage] (emb) at (5.6, 0) {Embed};
+  \node[stage] (idx) at (7.6, 0) {Index};
+  \node[io]    (db)  at (9.4, 0) {FAISS+BM25};
+
+  \draw[arr] (pdf) -- (ext);
+  \draw[arr] (ext) -- (chk);
+  \draw[arr] (chk) -- (emb);
+  \draw[arr] (emb) -- (idx);
+  \draw[arr] (idx) -- (db);
+
+  \node[anchor=north, font=\tiny\bfseries, color=blue!60!black]
+    at (ext.south) {Phase 1};
+  \node[anchor=north, font=\tiny\bfseries, color=blue!60!black]
+    at (emb.south) {Phase 2 + 3};
+  \node[anchor=south west, font=\scriptsize\bfseries]
+    at (-0.5, 0.55) {Cold ingestion (once per textbook)};
+
+  % Per query row
+  \node[io]    (q)   at (0, -2.4)   {Q};
+  \node[stage] (qe)  at (1.6, -2.4) {Embed};
+  \node[stage] (sr)  at (3.6, -2.4) {Search};
+  \node[stage] (rer) at (5.6, -2.4) {Rerank};
+  \node[stage] (gen) at (7.6, -2.4) {Generate};
+  \node[io]    (a)   at (9.4, -2.4) {Answer};
+
+  \draw[arr] (q)   -- (qe);
+  \draw[arr] (qe)  -- (sr);
+  \draw[arr] (sr)  -- (rer);
+  \draw[arr] (rer) -- (gen);
+  \draw[arr] (gen) -- (a);
+
+  \node[anchor=south west, font=\scriptsize\bfseries]
+    at (-0.5, -1.85) {Per query};
+\end{tikzpicture}
+
+\vspace{1ex}
+\small
+\textbf{Phase 1:} faster PDF extraction.
+\textbf{Phase 2:} hardware-aware embedding.
+\textbf{Phase 3:} pluggable embedder backends.
+
+\note{Show the diagram, point at where each phase sits. Cold path runs
+once per textbook, per-query path runs every question. We attack only
+the cold path.}
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}{What we changed}
+\textbf{Phase 1: Faster PDF extraction.}
+Parallelize \texttt{docling} across CPU workers via a process pool.
+Then add a \texttt{pypdfium2} fast path that skips layout analysis on
+plain-text textbooks and recovers section headings with a regex.
+
+\medskip
+
+\textbf{Phase 2: Hardware-aware embedding.}
+Sort batches by length so \texttt{llama.cpp}'s padding does not waste
+compute. Detect if a GPU is available and pick sequential GPU vs CPU
+process pool accordingly.
+
+\medskip
+
+\textbf{Phase 3: Pluggable embedder backends.}
+One keyword argument switches between \texttt{llama.cpp} (4\,B GGUF),
+GPT4All (Vulkan or CUDA), and HuggingFace
+\texttt{sentence-transformers} (Nomic-v1.5, MiniLM). Add a BLEU metric;
+fix a bug that was silently disabling the GPU for the test suite.
+
+\note{Each phase is a small surgical change. Phase 1 makes the slow
+thing parallel, then replaces the slow thing entirely. Phase 2 cleans
+up wasted compute. Phase 3 makes it easy to try lighter embedders.}
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}{Results}
+
+\begin{block}{Cold time-to-first-token}
+\centering
+\textbf{$\sim$\,2h 48m} (original) $\;\longrightarrow\;$
+\textbf{$\sim$\,45 s} (optimized, on a 4-core / 8\,GiB laptop GPU)
+\end{block}
+
+\medskip
+
+\textbf{Quality on the 11-question benchmark suite (RTX 6000, 8\,GiB cap):}
+
+\begin{center}
+\small
+\begin{tabular}{lrrr}
+\toprule
+variant            & params  & peak VRAM  & final score \\
+\midrule
+4\,B baseline       & 4\,B    & 5.4\,GiB   & 0.592 \\
+\textbf{MiniLM}     & 23\,M   & 2.2\,GiB   & \textbf{0.578} \\
+Nomic (ST)          & 137\,M  & 2.7\,GiB   & 0.563 \\
+Nomic (GPT4All Vulkan) & 137\,M & 2.1\,GiB & 0.558 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+
+The 23\,M MiniLM is within 1.4 points of the 4\,B baseline on final
+score. Every variant fits comfortably under the 8\,GiB cap. The 4\,B
+baseline still runs on the consumer GPU at 5.4\,GiB peak.
+
+\note{Headline number first: nearly three orders of magnitude on TTFT.
+Then the table. Don't read every row, just point at MiniLM line and
+say it matches the 4B model.}
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}{Takeaways}
+\begin{itemize}
+  \item For plain-text textbooks, layout-aware PDF extraction was
+    overkill. \texttt{pypdfium2} is roughly 1{,}100$\times$ faster
+    than the original sequential \texttt{docling} extractor and slightly
+    \emph{better} on end-to-end answer quality.
+  \medskip
+  \item On a small corpus, the cross-encoder reranker absorbs most of
+    the embedding-quality gap. A 23\,M MiniLM matches a 4\,B model on
+    final answer quality, because the right chunk only has to land in
+    the FAISS top-50 for the reranker to find it.
+  \medskip
+  \item TokenSmith now runs end to end on a 4-core / 8\,GiB consumer
+    machine. The remaining latency floor is cold extraction, which we
+    drove to 8.66\,s on the textbook.
+\end{itemize}
+
+\bigskip
+\centering
+\small
+Code: \texttt{github.com/singhals163/TokenSmith}
+
+\note{End on the cross-encoder insight. The story is not about
+inventing new tricks; it's about removing the parts that do not earn
+their cost.}
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}
+  \centering
+  {\Huge Questions?}\\[2em]
+  \small \texttt{github.com/singhals163/TokenSmith}
+\end{frame}
+
+\end{document}
