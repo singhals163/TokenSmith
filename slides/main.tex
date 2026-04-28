@@ -129,8 +129,7 @@ process pool accordingly.
 \textbf{Phase 3: Pluggable embedder backends.}
 One keyword argument switches between \texttt{llama.cpp} (4\,B GGUF),
 GPT4All (Vulkan or CUDA), and HuggingFace
-\texttt{sentence-transformers} (Nomic-v1.5, MiniLM). Add a BLEU metric;
-fix a bug that was silently disabling the GPU for the test suite.
+\texttt{sentence-transformers} (Nomic-v1.5, MiniLM).
 
 \note{Each phase is a small surgical change. Phase 1 makes the slow
 thing parallel, then replaces the slow thing entirely. Phase 2 cleans
@@ -143,7 +142,7 @@ up wasted compute. Phase 3 makes it easy to try lighter embedders.}
 \begin{block}{Cold time-to-first-token}
 \centering
 \textbf{$\sim$\,2h 48m} (original) $\;\longrightarrow\;$
-\textbf{$\sim$\,45 s} (optimized, on a 4-core / 8\,GiB laptop GPU)
+\textbf{$\sim$\,45 s} (4-core / 32\,GiB laptop with 8\,GiB RTX GPU)
 \end{block}
 
 \medskip
