@@ -20,7 +20,15 @@ def _import_docling():
     from docling.datamodel.pipeline_options import PdfPipelineOptions
     from docling.document_converter import DocumentConverter, PdfFormatOption, InputFormat
     from docling.backend.docling_parse_v2_backend import DoclingParseV2DocumentBackend
-    return PdfPipelineOptions, DocumentConverter, PdfFormatOption, InputFormat, DoclingParseV2DocumentBackend
+    # AcceleratorOptions / AcceleratorDevice are present in docling >= 2.x and
+    # are needed for the GPU baseline. Older wheels may not have them; we
+    # tolerate the absence and stay on CPU when it does not import cleanly.
+    try:
+        from docling.datamodel.pipeline_options import AcceleratorOptions, AcceleratorDevice
+    except ImportError:
+        AcceleratorOptions, AcceleratorDevice = None, None
+    return (PdfPipelineOptions, DocumentConverter, PdfFormatOption, InputFormat,
+            DoclingParseV2DocumentBackend, AcceleratorOptions, AcceleratorDevice)
 
 
 @timeit(name="Extraction: extract_sections_from_markdown")
@@ -184,7 +192,7 @@ def split_pdf(file_path: str, chunk_size: int = 50) -> List[dict]:
 def process_pdf_chunk(chunk_info: dict) -> dict:
     """Worker function to process a single PDF chunk with verbose logging."""
     (PdfPipelineOptions, DocumentConverter, PdfFormatOption, InputFormat,
-     DoclingParseV2DocumentBackend) = _import_docling()
+     DoclingParseV2DocumentBackend, AcceleratorOptions, AcceleratorDevice) = _import_docling()
     input_file_path = chunk_info["path"]
     offset = chunk_info["start_page_offset"]
     end_page = chunk_info["end_page"]
@@ -193,6 +201,32 @@ def process_pdf_chunk(chunk_info: dict) -> dict:
     pipeline_options = PdfPipelineOptions()
     pipeline_options.do_ocr = False
     pipeline_options.do_table_structure = False
+
+    # Phase 1 v1 GPU-baseline experiment.
+    # DOCLING_DEVICE selects the accelerator for layout analysis:
+    #   "cpu"  : original behavior (default).
+    #   "cuda" : run layout-analysis vision transformer on the GPU.
+    #   "auto" : let docling pick; on a CUDA host this is usually GPU.
+    # DOCLING_THREADS sets the CPU thread budget for stages that stay on CPU.
+    if AcceleratorOptions is not None and AcceleratorDevice is not None:
+        device_name = os.environ.get("DOCLING_DEVICE", "cpu").lower()
+        device_map = {
+            "cpu":  AcceleratorDevice.CPU,
+            "cuda": AcceleratorDevice.CUDA,
+            "auto": AcceleratorDevice.AUTO,
+        }
+        chosen_device = device_map.get(device_name, AcceleratorDevice.CPU)
+        try:
+            num_threads = int(os.environ.get("DOCLING_THREADS", "4"))
+        except ValueError:
+            num_threads = 4
+        pipeline_options.accelerator_options = AcceleratorOptions(
+            num_threads=num_threads, device=chosen_device,
+        )
+        print(f"{log_prefix} docling accelerator: device={device_name} threads={num_threads}")
+    else:
+        print(f"{log_prefix} docling accelerator: AcceleratorOptions not available "
+              f"(install docling>=2.0 to enable DOCLING_DEVICE)")
 
     converter = DocumentConverter(
         format_options={
