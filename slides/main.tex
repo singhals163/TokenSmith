@@ -111,8 +111,8 @@ question. Phases 1, 2, 3 all touch the cold path.}
 %% ----------------------------------------------------------
 \begin{frame}{Phase 1 v1: parallelize PDF extraction}
 Layout analysis dominates \texttt{docling}; it runs page-by-page and
-the pages are independent. Restructure as map-reduce: split the PDF,
-run \texttt{docling} workers in parallel, reduce on offset.
+the pages are independent. Restructure as map-reduce, splitting the PDF,
+running \texttt{docling} workers in parallel and sorting based on offset.
 
 \begin{columns}[T,onlytextwidth]
 \begin{column}{0.42\textwidth}
