@@ -11,6 +11,7 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning, arrows.meta}
 \usepackage{booktabs}
+\usepackage{graphicx}
 
 \title[TokenSmith on Consumer GPUs]{Optimizing TokenSmith for Consumer-GPU Hardware}
 \subtitle{A Local-First RAG Pipeline}
@@ -60,7 +61,6 @@ Nobody waits that long for one textbook.
   io/.style={font=\footnotesize\itshape},
   arr/.style={->, thick}
 ]
-  % Cold ingestion row
   \node[io]    (pdf) at (0, 0)   {PDF};
   \node[stage] (ext) at (1.6, 0) {Extract};
   \node[stage] (chk) at (3.6, 0) {Chunk};
@@ -81,7 +81,6 @@ Nobody waits that long for one textbook.
   \node[anchor=south west, font=\scriptsize\bfseries]
     at (-0.5, 0.55) {Cold ingestion (once per textbook)};
 
-  % Per query row
   \node[io]    (q)   at (0, -2.4)   {Q};
   \node[stage] (qe)  at (1.6, -2.4) {Embed};
   \node[stage] (sr)  at (3.6, -2.4) {Search};
@@ -105,74 +104,156 @@ Nobody waits that long for one textbook.
 \textbf{Phase 2:} hardware-aware embedding.
 \textbf{Phase 3:} pluggable embedder backends.
 
-\note{Show the diagram, point at where each phase sits. Cold path runs
-once per textbook, per-query path runs every question. We attack only
-the cold path.}
+\note{Cold path runs once per textbook, per-query path runs every
+question. Phases 1, 2, 3 all touch the cold path.}
 \end{frame}
 
 %% ----------------------------------------------------------
-\begin{frame}{What we changed}
-\textbf{Phase 1: Faster PDF extraction.}
-Parallelize \texttt{docling} across CPU workers via a process pool.
-Then add a \texttt{pypdfium2} fast path that skips layout analysis on
-plain-text textbooks and recovers section headings with a regex.
+\begin{frame}{Phase 1 v1: parallelize PDF extraction}
+Layout analysis dominates \texttt{docling}; it runs page-by-page and
+the pages are independent. Restructure as map-reduce: split the PDF,
+run \texttt{docling} workers in parallel, reduce on offset.
 
-\medskip
-
-\textbf{Phase 2: Hardware-aware embedding.}
-Sort batches by length so \texttt{llama.cpp}'s padding does not waste
-compute. Detect if a GPU is available and pick sequential GPU vs CPU
-process pool accordingly.
-
-\medskip
-
-\textbf{Phase 3: Pluggable embedder backends.}
-One keyword argument switches between \texttt{llama.cpp} (4\,B GGUF),
-GPT4All (Vulkan or CUDA), and HuggingFace
-\texttt{sentence-transformers} (Nomic-v1.5, MiniLM). Add a BLEU metric;
-fix a bug that was silently disabling the GPU for the test suite.
-
-\note{Each phase is a small surgical change. Phase 1 makes the slow
-thing parallel, then replaces the slow thing entirely. Phase 2 cleans
-up wasted compute. Phase 3 makes it easy to try lighter embedders.}
-\end{frame}
-
-%% ----------------------------------------------------------
-\begin{frame}{Results}
-
-\begin{block}{Cold time-to-first-token}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.42\textwidth}
 \centering
-\textbf{$\sim$\,2h 48m} (original) $\;\longrightarrow\;$
-\textbf{$\sim$\,45 s} (optimized, on a 4-core / 8\,GiB laptop GPU)
-\end{block}
-
-\medskip
-
-\textbf{Quality on the 11-question benchmark suite (RTX 6000, 8\,GiB cap):}
-
-\begin{center}
-\small
-\begin{tabular}{lrrr}
+\footnotesize
+\begin{tabular}{rrr}
 \toprule
-variant            & params  & peak VRAM  & final score \\
+workers & wall (s) & speedup \\
 \midrule
-4\,B baseline       & 4\,B    & 5.4\,GiB   & 0.592 \\
-\textbf{MiniLM}     & 23\,M   & 2.2\,GiB   & \textbf{0.578} \\
-Nomic (ST)          & 137\,M  & 2.7\,GiB   & 0.563 \\
-Nomic (GPT4All Vulkan) & 137\,M & 2.1\,GiB & 0.558 \\
+1   & 9{,}650 & 1.0$\times$ \\
+4   & 2{,}018 & 4.8$\times$ \\
+16  & 1{,}116 & 8.7$\times$ \\
+32  & 535     & 18.0$\times$ \\
+62  & 382     & \textbf{25.3$\times$} \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{column}
+\begin{column}{0.55\textwidth}
+\centering
+\includegraphics[width=\linewidth]{figs/extraction_scaling.png}
+\end{column}
+\end{columns}
+
+\vspace{0.5ex}
+\begin{block}{}
+\centering
+\textbf{25.3$\times$ speedup at 62 workers.} A consumer laptop has
+4 cores, not 62, and 4 workers still takes $\sim$\,34 minutes.
+Parallelism alone does not get us there.
+\end{block}
+
+\note{The scaling is real on a server. The 8-worker dip is a small
+cache-pressure artifact at the chosen chunk size. The point of the
+slide: even with this win, a 4-core laptop is stuck at 34 minutes.}
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}{Phase 1 v2: pypdfium2 fast path}
+Plain-text textbooks do not need layout analysis. Skip \texttt{docling}
+entirely. Use \texttt{pypdfium2} to read raw text directly from each
+page range; recover section headings with a regex on
+``\texttt{N.N Title}'' patterns.
+
+\bigskip
+
+\begin{block}{}
+\centering
+\textbf{2h 40m $\rightarrow$ 8.66\,s} (4 workers, RTX 6000 host).
+\\[0.4ex]
+$\sim$\,$\mathbf{1{,}100\times}$ faster than the original sequential
+\texttt{docling} extractor.
+\end{block}
+
+\bigskip
+
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\textbf{Pros}
+\begin{itemize}
+  \item $\sim$\,1{,}100$\times$ faster on the textbook
+  \item No temp files, no map-phase split
+  \item End-to-end answer quality slightly \emph{better}
+        (final 0.606 vs 0.592)
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Cons}
+\begin{itemize}
+  \item No layout analysis
+  \item Tables, multi-column papers, scanned PDFs need
+        \texttt{docling}
+  \item Regex heading detection is fragile on non-standard layouts
+\end{itemize}
+\end{column}
+\end{columns}
+
+\note{For the textbook target, layout analysis was overhead. We keep
+docling available for documents that genuinely need it.}
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}{Phase 2: hardware router and length-sorted batches}
+Two small fixes inside the embedder.
+
+\bigskip
+
+\textbf{Problem 1.} The indexer always used a CPU process pool, even
+when a GPU was reachable. The pool fights the GPU's allocator on
+mixed hosts.\\
+\textbf{Fix.} Detect the GPU at startup; pick sequential GPU vs CPU
+pool accordingly.
+
+\bigskip
+
+\textbf{Problem 2.} \texttt{llama.cpp} pads each embedding batch to the
+longest text in that batch. Random ordering wastes compute on short
+texts that share a batch with one long text.\\
+\textbf{Fix.} Sort inputs by length descending before batching, and
+permute the result back so the FAISS index ID order is unchanged.
+
+\note{Don't dwell on this slide. Two small wins in the embedder.}
+\end{frame}
+
+%% ----------------------------------------------------------
+\begin{frame}{Phase 3: pluggable embedder backends}
+\textbf{Motivation.} A 4\,B embedder is heavy. Can a 23\,M model match
+its answer quality on a small corpus?
 
 \medskip
 
-The 23\,M MiniLM is within 1.4 points of the 4\,B baseline on final
-score. Every variant fits comfortably under the 8\,GiB cap. The 4\,B
-baseline still runs on the consumer GPU at 5.4\,GiB peak.
+\textbf{Approach.} Refactor the embedder around a backend interface.
+One keyword argument switches between \texttt{llama.cpp} (4\,B GGUF),
+GPT4All (Vulkan or CUDA), and HuggingFace
+\texttt{sentence-transformers} (Nomic-v1.5 137\,M, MiniLM 23\,M).
 
-\note{Headline number first: nearly three orders of magnitude on TTFT.
-Then the table. Don't read every row, just point at MiniLM line and
-say it matches the 4B model.}
+\medskip
+
+\centering
+\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+variant            & params  & peak VRAM  & final \\
+\midrule
+4\,B baseline (llama.cpp) & 4\,B    & 5.4\,GiB   & 0.592 \\
+\textbf{MiniLM (HF)}      & 23\,M   & 2.2\,GiB   & \textbf{0.578} \\
+Nomic (HF)                & 137\,M  & 2.7\,GiB   & 0.563 \\
+Nomic (GPT4All Vulkan)    & 137\,M  & 2.1\,GiB   & 0.558 \\
+\bottomrule
+\end{tabular}
+
+\vspace{1ex}
+\begin{block}{}
+\centering
+\textbf{Cold time-to-first-token: $\sim$\,2h 48m $\rightarrow$
+$\sim$\,45 s} on a 4-core / 8\,GiB consumer GPU. Over 200$\times$.
+\\[0.4ex]
+MiniLM matches the 4\,B baseline within 1.4 points on final score.
+\end{block}
+
+\note{Headline number first: 200x speedup. Then the table. Then the
+quality story: a 23M model is enough on this corpus.}
 \end{frame}
 
 %% ----------------------------------------------------------
@@ -180,11 +261,11 @@ say it matches the 4B model.}
 \begin{itemize}
   \item For plain-text textbooks, layout-aware PDF extraction was
     overkill. \texttt{pypdfium2} is roughly 1{,}100$\times$ faster
-    than the original sequential \texttt{docling} extractor and slightly
+    than the original sequential \texttt{docling} and slightly
     \emph{better} on end-to-end answer quality.
   \medskip
-  \item On a small corpus, the cross-encoder reranker absorbs most of
-    the embedding-quality gap. A 23\,M MiniLM matches a 4\,B model on
+  \item On a small corpus, the cross-encoder reranker absorbs the
+    embedding-quality gap. A 23\,M MiniLM matches a 4\,B model on
     final answer quality, because the right chunk only has to land in
     the FAISS top-50 for the reranker to find it.
   \medskip
