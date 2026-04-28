@@ -172,25 +172,35 @@ $\sim$\,$\mathbf{1{,}100\times}$ faster than the original sequential
 \begin{column}{0.48\textwidth}
 \textbf{Pros}
 \begin{itemize}
-  \item $\sim$\,1{,}100$\times$ faster on the textbook
-  \item No temp files, no map-phase split
-  \item End-to-end answer quality slightly \emph{better}
+  \item I/O-bound; saturates all CPU cores cheaply
+  \item Zero ML dependencies (no PyTorch, no model load)
+  \item Slightly higher answer quality on this corpus
         (final 0.606 vs 0.592)
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
 \textbf{Cons}
 \begin{itemize}
-  \item No layout analysis
-  \item Tables, multi-column papers, scanned PDFs need
-        \texttt{docling}
-  \item Regex heading detection is fragile on non-standard layouts
+  \item Spatially blind: two-column layouts get stitched
+        horizontally and silently corrupt the text
+  \item Regex headings are brittle: ``\texttt{Chapter 1:}'',
+        broken-line headers, extra whitespace all get missed
+  \item No text layer means no output (scanned PDFs)
 \end{itemize}
 \end{column}
 \end{columns}
 
-\note{For the textbook target, layout analysis was overhead. We keep
-docling available for documents that genuinely need it.}
+\vspace{0.7ex}
+\centering\footnotesize
+\textbf{Partial solution.} Speed depends on a clean single-column
+native-text PDF. Next step: run \texttt{docling} on the GPU and
+measure layout-aware extraction at real speed.
+
+\note{Be honest here. pypdfium2 is fast on this textbook because
+the textbook is well-formatted; on a two-column paper or a
+non-standard heading style, the regex silently corrupts the
+output. The real fix is to make the layout-aware tool fast,
+which is the docling-on-GPU experiment teed up next.}
 \end{frame}
 
 %% ----------------------------------------------------------
@@ -259,10 +269,12 @@ quality story: a 23M model is enough on this corpus.}
 %% ----------------------------------------------------------
 \begin{frame}{Takeaways}
 \begin{itemize}
-  \item For plain-text textbooks, layout-aware PDF extraction was
-    overkill. \texttt{pypdfium2} is roughly 1{,}100$\times$ faster
-    than the original sequential \texttt{docling} and slightly
-    \emph{better} on end-to-end answer quality.
+  \item For clean single-column native-text PDFs, \texttt{pypdfium2}
+    is roughly 1{,}100$\times$ faster than the original sequential
+    \texttt{docling} and slightly better on answer quality. For
+    visually complex documents (multi-column papers, scanned PDFs,
+    non-standard heading styles) \texttt{docling} is still required;
+    the next experiment is to make it fast on the GPU.
   \medskip
   \item On a small corpus, the cross-encoder reranker absorbs the
     embedding-quality gap. A 23\,M MiniLM matches a 4\,B model on
@@ -270,8 +282,8 @@ quality story: a 23M model is enough on this corpus.}
     the FAISS top-50 for the reranker to find it.
   \medskip
   \item TokenSmith now runs end to end on a 4-core / 8\,GiB consumer
-    machine. The remaining latency floor is cold extraction, which we
-    drove to 8.66\,s on the textbook.
+    machine for textbooks that fit the fast path; layout-aware
+    extraction is the remaining floor.
 \end{itemize}
 
 \bigskip
